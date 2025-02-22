@@ -2,16 +2,15 @@
   "name": "inventory-supply-tracker-next",
   "version": "1.0.0",
   "private": true,
-"scripts": {
-  "typeorm": "npx ts-node --require tsconfig-paths/register ./node_modules/typeorm/cli.js",
-  "migration:generate": "npx ts-node --require tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate ./app/db/migrations/%npm_config_name% -d ./app/db/data-source.ts",
-  "dev": "next dev",
-  "build": "next build",
-  "start": "next start",
-  "migration:run": "npm run typeorm -- migration:run -d ./app/db/data-source.ts",
-  "migration:revert": "npm run typeorm -- migration:revert -d ./app/db/data-source.ts"
-},
-
+  "scripts": {
+    "typeorm": "npx ts-node --require tsconfig-paths/register ./node_modules/typeorm/cli.js",
+    "migration:generate": "npx ts-node --require tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate ./app/db/migrations/%npm_config_name% -d ./app/db/data-source.ts",
+    "dev": "next dev -p 7700",
+    "build": "next build",
+    "start": "next start",
+    "migration:run": "npm run typeorm -- migration:run -d ./app/db/data-source.ts",
+    "migration:revert": "npm run typeorm -- migration:revert -d ./app/db/data-source.ts"
+  },
   "dependencies": {
     "@types/express": "^5.0.0",
     "bcrypt": "^5.1.1",
@@ -20,6 +19,7 @@
     "mysql2": "^3.12.0",
     "next": "15.1.7",
     "next-auth": "^4.24.11",
+    "nodemailer": "^6.10.0",
     "pg": "^8.13.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -32,6 +32,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.8",
     "@types/node": "^20.17.19",
+    "@types/nodemailer": "^6.4.17",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^16.4.7",
