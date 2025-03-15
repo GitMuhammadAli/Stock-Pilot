@@ -12,10 +12,16 @@
     "migration:revert": "npm run typeorm -- migration:revert -d ./app/db/data-source.ts"
   },
   "dependencies": {
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-separator": "^1.1.2",
+    "@radix-ui/react-slot": "^1.1.2",
     "@types/express": "^5.0.0",
     "bcrypt": "^5.1.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.482.0",
     "mysql2": "^3.12.0",
     "next": "15.1.7",
     "next-auth": "^4.24.11",
@@ -24,6 +30,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sqlite3": "^5.1.7",
+    "tailwind-merge": "^3.0.2",
     "tsconfig-paths": "^4.2.0",
     "typeorm": "^0.3.20"
   },
@@ -35,12 +42,13 @@
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.21",
     "dotenv": "^16.4.7",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
-    "postcss": "^8",
+    "postcss": "^8.5.3",
     "reflect-metadata": "^0.2.2",
-    "tailwindcss": "^3.4.1",
+    "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
     "typescript": "^5"
   }

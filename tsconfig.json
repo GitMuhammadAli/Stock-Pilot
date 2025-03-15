@@ -22,7 +22,16 @@
     "paths": {
       "@/*": [
         "./app/*"
-      ]
+      ],
+      "@/components/*": [
+        "./components/*"
+      ],
+      "@/frontend/lib/*": [
+        "./lib/*"
+      ],
+      "@/app/lib*": [
+        "./app/lib"
+      ],
     },
     "incremental": true,
     "jsx": "preserve",

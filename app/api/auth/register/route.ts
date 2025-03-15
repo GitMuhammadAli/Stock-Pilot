@@ -6,19 +6,19 @@ import Email from "next-auth/providers/email";
 
 export async function POST(req: NextRequest) {
     // console.log(req.json())
-  const { email } = await req.json();
+  const { name , email } = await req.json();
 
   
-  if (!email) {
+  if (!email || !name) {
     return NextResponse.json(
-      { success: false, message: "Email is required." },
+      { success: false, message: "Email and Name is required." },
       { status: 400 }
     );
   }
 
   await connectDB();
   const authService = new AuthService();
-  const response = await authService.register({ email });
+  const response = await authService.register({name , email });
 
   return NextResponse.json(response);
 }
