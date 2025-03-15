@@ -18,7 +18,7 @@ interface LoginResponse {
 }
 
 interface VerifyResponse {
-  cookies: any;
+  cookies?: any;
   success: boolean;
   message: string;
   token?: string;
@@ -117,7 +117,7 @@ export class AuthService {
       });
 
       if (!user) {
-        return { success: false, message: "Invalid verification token." };
+        return { success: false, message: "Invalid verification token."  };
       }
 
       if (!user.verificationTokenExpiresAt || 

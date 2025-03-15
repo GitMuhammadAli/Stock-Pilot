@@ -29,6 +29,7 @@ const publicRoutes = [
   '/api',
   '/_next',
   '/favicon.ico',
+  '/verify',
 ];
 
 export function AuthProvider({ children }: { children: ReactNode }) {

@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { User, Mail, AlertCircle, Loader2 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
-import COLORS from "@/frontend/lib/colors"
 
 export default function Register() {
   const router = useRouter()
@@ -59,27 +58,27 @@ export default function Register() {
     }
   }
   return (
-    <div className={`flex items-center justify-center min-h-screen bg-[${COLORS.bgPrimary}] p-4`}>
-      <Card className={`w-full max-w-md bg-[${COLORS.bgSecondary}] border-none shadow-xl`}>
+    <div className="flex items-center justify-center min-h-screen bg-bg-primary p-4">
+      <Card className="w-full max-w-md bg-bg-secondary border-none shadow-xl">
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
-            <div className={`bg-[${COLORS.bgTertiary}] p-3 rounded-full`}>
-              <User className={`h-10 w-10 text-[${COLORS.brandPrimary}]`} />
+            <div className="bg-bg-tertiary p-3 rounded-full">
+              <User className="h-10 w-10 text-brand-primary" />
             </div>
           </div>
-          <CardTitle className={`text-2xl font-bold text-[${COLORS.textPrimary}] text-center`}>Create an Account</CardTitle>
-          <CardDescription className={`text-[${COLORS.textMuted}] text-center`}>
+          <CardTitle className="text-2xl font-bold text-primary text-center">Create an Account</CardTitle>
+          <CardDescription className="text-muted text-center">
             Enter your details to register for StockPilot
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className={`text-[${COLORS.textPrimary}]`}>
+              <Label htmlFor="name" className="text-primary">
                 Full Name
               </Label>
               <div className="relative">
-                <User className={`absolute left-3 top-3 h-5 w-5 text-[${COLORS.textMuted}]`} />
+                <User className="absolute left-3 top-3 h-5 w-5 text-muted" />
                 <Input
                   id="name"
                   type="text"
@@ -87,16 +86,16 @@ export default function Register() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className={`pl-10 bg-[${COLORS.bgTertiary}] border-none text-[${COLORS.textPrimary}]`}
+                  className="pl-10 bg-bg-tertiary border-none text-primary"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email" className={`text-[${COLORS.textPrimary}]`}>
+              <Label htmlFor="email" className="text-primary">
                 Email
               </Label>
               <div className="relative">
-                <Mail className={`absolute left-3 top-3 h-5 w-5 text-[${COLORS.textMuted}]`} />
+                <Mail className="absolute left-3 top-3 h-5 w-5 text-muted" />
                 <Input
                   id="email"
                   type="email"
@@ -104,13 +103,13 @@ export default function Register() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className={`pl-10 bg-[${COLORS.bgTertiary}] border-none text-[${COLORS.textPrimary}]`}
+                  className="pl-10 bg-bg-tertiary border-none text-primary"
                 />
               </div>
             </div>
             <Button
               type="submit"
-              className={`w-full bg-[${COLORS.brandPrimary}] text-[${COLORS.bgPrimary}] hover:bg-[${COLORS.brandPrimaryHover}]`}
+              className="w-full bg-brand-primary text-bg-primary hover:bg-brand-primary-hover"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -128,22 +127,22 @@ export default function Register() {
             <Alert
               className={`mt-4 ${
                 message.type === "success" 
-                  ? `bg-[${COLORS.bgTertiary}] border-[${COLORS.brandPrimary}]` 
-                  : `bg-[${COLORS.bgTertiary}] border-[${COLORS.error}]`
+                  ? "bg-bg-tertiary border-brand-primary" 
+                  : "bg-bg-tertiary border-status-error"
               }`}
             >
-              {message.type === "error" && <AlertCircle className={`h-4 w-4 text-[${COLORS.error}]`} />}
-              <AlertDescription className={`text-[${COLORS.textPrimary}]`}>{message.text}</AlertDescription>
+              {message.type === "error" && <AlertCircle className="h-4 w-4 text-status-error" />}
+              <AlertDescription className="text-primary">{message.text}</AlertDescription>
             </Alert>
           )}
         </CardContent>
 
-        <Separator className={`bg-[${COLORS.bgTertiary}]`} />
+        <Separator className="bg-bg-tertiary" />
 
         <CardFooter className="flex justify-center pt-4">
-          <p className={`text-sm text-[${COLORS.textMuted}]`}>
+          <p className="text-sm text-muted">
             Already have an account?{" "}
-            <Link href="/login" className={`text-[${COLORS.brandPrimary}] hover:underline`}>
+            <Link href="/login" className="text-brand-primary hover:underline">
               Login
             </Link>
           </p>
