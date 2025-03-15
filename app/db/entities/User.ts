@@ -13,7 +13,6 @@ export class User {
     @Column()
     name!:string
 
-
     @Column({ unique: true })
     email!: string;
     
@@ -31,7 +30,7 @@ export class User {
 
     @CreateDateColumn()
     createdAt!: Date;
-
+    
     @UpdateDateColumn()
     updatedAt!: Date;
 }

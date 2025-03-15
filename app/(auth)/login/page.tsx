@@ -1,10 +1,9 @@
 "use client"
 
 import type React from "react"
-
-import { useState , useEffect } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,21 +11,34 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Mail, AlertCircle, Loader2 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
+import { useAuth } from "@/providers/AuthProvider"
+
 export default function Login() {
   const [email, setEmail] = useState("")
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const router =  useRouter()
-
-
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { isAuthenticated } = useAuth()
   
+  useEffect(() => {
+    const errorMsg = searchParams.get('error')
+    if (errorMsg) {
+      setMessage({ type: "error", text: decodeURIComponent(errorMsg) })
+    }
+  }, [searchParams])
+  
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard')
+    }
+  }, [isAuthenticated, router])
+
   useEffect(() => {
     if (message) {
       const timer = setTimeout(() => {
         setMessage(null);
-      }, 5000); // 5 seconds
-
-      // Clean up the timer when component unmounts or message changes
+      }, 5000); 
       return () => clearTimeout(timer);
     }
   }, [message]);
@@ -43,17 +55,26 @@ export default function Login() {
         },
         body: JSON.stringify({ email }),
       });
-  
+
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.message || "Failed to send login link");
       }
-      setMessage({ type: "success", text: "Check your email for the login link!" })
+      
+      setMessage({ 
+        type: "success", 
+        text: "Check your email for the login link! It will expire in 30 minutes." 
+      })
+      // Clear the form
+      setEmail("")
       setTimeout(() => {
-        router.push('/verify')
-      }, 4000);
+                router.push('/verify')
+              }, 4000);
     } catch (error) {
-      setMessage({ type: "error", text: "Failed to send login link. Please try again." })
+      setMessage({ 
+        type: "error", 
+        text: error instanceof Error ? error.message : "Failed to send login link. Please try again." 
+      })
     } finally {
       setIsLoading(false)
     }
@@ -111,8 +132,8 @@ export default function Login() {
           {message && (
             <Alert
               className={`mt-4 ${
-                message.type === "success" 
-                  ? "bg-bg-tertiary border-brand-primary" 
+                message.type === "success"
+                  ? "bg-bg-tertiary border-brand-primary"
                   : "bg-bg-tertiary border-status-error"
               }`}
             >
@@ -136,4 +157,3 @@ export default function Login() {
     </div>
   )
 }
-

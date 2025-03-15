@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from '@/providers/AuthProvider';
+import { connectDB } from "./db/connectDb";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
-
-
-import { connectDB } from "./db/data-source";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -25,13 +25,15 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   await connectDB();
-  
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AuthService } from "@/lib/services/authServices";
-import { connectDB } from "@/db/data-source";
-import { cookies } from "next/headers";
+import { connectDB } from "@/db/connectDb";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const token = searchParams.get("token");
-
-  console.log("Verifying token:", token);
   
   if (!token) {
     return NextResponse.json(
@@ -21,30 +18,25 @@ export async function GET(req: NextRequest) {
   const response = await authService.verify({ token });
 
   if (!response.success) {
-    return NextResponse.json(response, { status: 400 });
+    return NextResponse.redirect(
+      new URL(`/login?error=${encodeURIComponent(response.message)}`, req.url)
+    );
   }
 
-  // Get cookie jar
-  const cookieJar = cookies();
+  const redirectUrl = new URL('/complete-login', req.url);
+  const responseRedirect = NextResponse.redirect(redirectUrl);
   
   if (response.token) {
-    // Set the cookie with more compatible options
-    (await cookieJar).set({
-      name: "authToken",
+    responseRedirect.cookies.set({
+      name: 'authToken',
       value: response.token,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      sameSite: "lax",
+      secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+      sameSite: 'strict'
     });
-    
-    // Log cookie setting success
-    console.log("🍪 Auth cookie set successfully");
   }
 
-  // Create the response object
-  const jsonResponse = NextResponse.json(response);
-  
-  return jsonResponse;
+  return responseRedirect;
 }

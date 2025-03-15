@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AuthService } from "@/lib/services/authServices";
 import { AppDataSource } from "@/db/data-source";
-import { connectDB } from "@/db/data-source";
+import { connectDB } from "@/db/connectDb";
 import Email from "next-auth/providers/email";
 
 

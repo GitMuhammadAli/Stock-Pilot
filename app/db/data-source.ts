@@ -16,9 +16,3 @@ export const AppDataSource = new DataSource({
   logging: process.env.NODE_ENV === "development",
 });
 
-export const connectDB = async () => {
-  if (!AppDataSource.isInitialized) {
-    await AppDataSource.initialize();
-    console.log("data base connected ✔✔✔")
-  }
-};

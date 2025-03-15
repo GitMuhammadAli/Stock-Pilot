@@ -1,13 +1,32 @@
+import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { verify } from "jsonwebtoken";
 
-export async function GET() {
-  const authCookies = await cookies();
-  const authToken = authCookies.get("authToken");
-
-  if (!authToken) {
-    return NextResponse.json({ success: false, message: "No auth token found" }, { status: 401 });
+export async function GET(req: NextRequest) {
+  try {
+    const cookieStore = cookies();
+    const authToken = (await cookieStore).get("authToken")?.value;
+    
+    if (!authToken) {
+      return NextResponse.json({ 
+        authenticated: false, 
+        message: "No auth token found" 
+      });
+    }
+    
+    // Verify the token
+    const secret = process.env.JWT_SECRET || "fallback-secret-key-for-development";
+    const decoded = verify(authToken, secret);
+    
+    return NextResponse.json({ 
+      authenticated: true, 
+      user: decoded 
+    });
+  } catch (error) {
+    console.error("Cookie verification error:", error);
+    return NextResponse.json({ 
+      authenticated: false, 
+      message: "Invalid auth token" 
+    }, { status: 401 });
   }
-
-  return NextResponse.json({ success: true, token: authToken.value });
 }

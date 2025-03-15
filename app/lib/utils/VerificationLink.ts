@@ -16,7 +16,7 @@ export const sendVerificationLink = async (email: string, verificationLink: stri
   try {
     console.log(process.env.MAILTRAP_USER)
     console.log(email,verificationLink)
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: '"Inventory Management System" <no-reply@inventorymanager.com>',
       to: email,
       subject: "Welcome to Stock Pilot - Verify Your Account",
@@ -26,7 +26,7 @@ export const sendVerificationLink = async (email: string, verificationLink: stri
           <h1 style="color: #2c3e50; text-align: center;">Welcome to Stock Pilot!</h1>
           <p style="color: #34495e; font-size: 16px; line-height: 1.5;">Thank you for choosing our inventory management solution. To get started, please verify your account by clicking the button below:</p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${verificationLink}" style="background-color: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify Your Account</a>
+            <a href="${verificationLink}" style="background-color: #B9F900; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify Your Account</a>
           </div>
           <p style="color: #7f8c8d; font-size: 14px;">If the button doesn't work, you can copy and paste this link into your browser:</p>
           <p style="color: #7f8c8d; font-size: 14px; word-break: break-all;">${verificationLink}</p>
@@ -35,8 +35,11 @@ export const sendVerificationLink = async (email: string, verificationLink: stri
         </div>
       `,
     });
-    console.log(`✅ Verification link sent to ${email}`);
+    
+    console.log("Email sent: %s", info.messageId);
+    return verificationLink;
   } catch (error) {
-    console.error("❌ Error sending verification email:", error);
+    console.error("Error sending email:", error);
+    throw new Error("Failed to send verification email");
   }
 };

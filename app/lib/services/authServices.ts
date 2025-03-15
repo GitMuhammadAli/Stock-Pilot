@@ -1,124 +1,156 @@
 import { DataSource } from "typeorm";
 import { User } from "@/db/entities/User";
 import { Repository } from "typeorm";
-// import { generateOTP , checkValidity } from "../utils/auth";
 import { AppDataSource } from "@/db/data-source";
-import { sendlinkToUser } from "../utils/auth";
-import { promises } from "dns";
-import jwt from "jsonwebtoken";
+import { sendVerificationLink } from "../utils/VerificationLink";
+import { signJwt } from '@/lib/utils/jwt';
+import crypto from 'crypto';
 
-interface registerResponce {
+interface RegisterResponse {
   success: boolean;
   message: string;
-  data: User;
+  data?: User;
 }
 
-interface loginResponce {
+interface LoginResponse {
+  success: boolean;
+  message: string;
+}
+
+interface VerifyResponse {
+  cookies: any;
   success: boolean;
   message: string;
   token?: string;
 }
 
-
-interface verifyResponce{
-    success:boolean,
-    message:string,
-    token?:string,
-    cookies?:string,
-    jwtToken?:string,
+interface VerifyData {
+  token: string;
 }
 
-interface verifyData{
-    token:string,
-}
-
-interface registerData {
-  name:string,
+interface RegisterData {
+  name: string;
   email: string;
 }
-interface loginData {
+
+interface LoginData {
   email: string;
 }
 
 export class AuthService {
-  private user: Repository<User>;
+  private userRepo: Repository<User>;
 
   constructor() {
-    this.user = AppDataSource.getRepository(User);
+    this.userRepo = AppDataSource.getRepository(User);
   }
 
-  async register({ name , email }: registerData): Promise<registerResponce> {
-    let user = await this.user.findOne({ where: { email } });
+  async register({ name, email }: RegisterData): Promise<RegisterResponse> {
+    try {
+      let user = await this.userRepo.findOne({ where: { email } });
 
-    if (!user) {
-      user = this.user.create({ name:name , email:email });
-      await this.user.save(user);
+      if (user) {
+        return {
+          success: true,
+          message: "User already registered. Please login.",
+          data: user,
+        };
+      }
+
+      user = this.userRepo.create({ name, email });
+      await this.userRepo.save(user);
 
       return {
         success: true,
-        message: "User registered Sucsessfully Please Login.",
+        message: "User registered successfully. Please login.",
         data: user,
       };
-    }
-    
-    return {
-      success: true,
-      message: "User Already registered Please Login.",
-      data: user,
-    };
-  }
-
-  async login({ email  }: loginData): Promise<loginResponce> {
-    let user = await this.user.findOne({ where: { email } });
-
-
-    if (!user) {
+    } catch (error) {
+      console.error("Registration error:", error);
       return {
         success: false,
-        message: "Please Register With your active email First",
+        message: "An error occurred during registration.",
       };
     }
-
-    await sendlinkToUser(email);
-
-    return { success: true, message: "Link Sent successfully. Please Verify" };
   }
 
+  async login({ email }: LoginData): Promise<LoginResponse> {
+    try {
+      let user = await this.userRepo.findOne({ where: { email } });
 
-  async verify({token}:verifyData):Promise<verifyResponce>{
-
-    const user = await this.user.findOne({where:{verificationToken: token }})
-
-    if(!user){
+      if (!user) {
         return {
-            success:false,
-            message:"please Verify Link or request new Link"
-        }
-    }
+          success: false,
+          message: "Please register with your active email first.",
+        };
+      }
 
-    if (!user || !user.verificationTokenExpiresAt || new Date() > user.verificationTokenExpiresAt) {
-        return {
-            success:false,
-            message:"Token expired, please request new link"
-        }
-    }
+      // Generate verification token
+      const token = crypto.randomBytes(32).toString('hex');
+      user.verificationToken = token;
+      user.verificationTokenExpiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+      await this.userRepo.save(user);
 
-    user.isVerified = true;
-    user.verificationToken = undefined;
-    user.verificationTokenExpiresAt = undefined;
-    await this.user.save(user);
+      // Generate verification link
+      const baseUrl = process.env.PORT_LINK || 'http://localhost:7700';
+      const verificationLink = `${baseUrl}/api/auth/verify?token=${token}`;
 
-    const jwtToken = jwt.sign(
-        { id: user.id, email: user.email, role: user.role }, 
-        process.env.JWT_SECRET as string, 
-        { expiresIn: "7d" }
-      );
-      
-    return {
-        success:true,
-        message:"Email verified successfully",
-        token:jwtToken,
+      // Send verification email
+      await sendVerificationLink(email, verificationLink);
+
+      return { 
+        success: true, 
+        message: "Verification link sent to your email. Please check your inbox." 
+      };
+    } catch (error) {
+      console.error("Login error:", error);
+      return {
+        success: false,
+        message: "An error occurred while sending the verification link.",
+      };
     }
   }
 
+  async verify({ token }: VerifyData): Promise<VerifyResponse> {
+    try {
+      const user = await this.userRepo.findOne({ 
+        where: { verificationToken: token } 
+      });
+
+      if (!user) {
+        return { success: false, message: "Invalid verification token." };
+      }
+
+      if (!user.verificationTokenExpiresAt || 
+          new Date() > user.verificationTokenExpiresAt) {
+        return { success: false, message: "Verification token has expired." };
+      }
+
+      // Update user as verified
+      user.isVerified = true;
+      user.verificationToken = undefined;
+      user.verificationTokenExpiresAt = undefined;
+      await this.userRepo.save(user);
+
+      // Create JWT token
+      const jwtToken = signJwt({
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        name: user.name,
+        isVerified: true
+      });
+
+      return {
+        success: true,
+        message: "Email verified successfully.",
+        token: jwtToken
+      };
+    } catch (error) {
+      console.error("Verification error:", error);
+      return { 
+        success: false, 
+        message: "An error occurred during verification." 
+      };
+    }
+  }
 }
