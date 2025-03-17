@@ -1,3 +1,58 @@
+📌 Project Overview
+💡 Purpose:
+Your Inventory & Supply Chain Tracker SaaS is designed to help businesses manage inventory, track supply chains, and optimize stock levels efficiently.
+
+🚀 Core Features:
+1️⃣ Authentication & Security (Login, Tokens, Role Management) ✅ (Completed Phase 1, Moving to Phase 2)
+2️⃣ Inventory Management (Products, Stock Levels, Categories, Alerts)
+3️⃣ Supply Chain Tracking (Orders, Suppliers, Shipment Tracking)
+4️⃣ Barcode Scanning & SKU System (Scan & Manage Inventory Fast)
+5️⃣ Reporting & Analytics (Sales Reports, Low Stock Alerts)
+6️⃣ Multi-Tenant SaaS Model (Multiple businesses, separate data)
+7️⃣ Admin Panel & User Management (Role-based access)
+8️⃣ Notifications & Real-time Updates (WebSockets, Email Alerts)
+9️⃣ API Integrations (External Shipping, Payment, Accounting Tools)
+🔟 Deployment & Scalability (Docker, Cloud Hosting, CI/CD)
+
+📌 Roadmap & Development Flow
+✅ Phase 1: Authentication & Security (Completed)
+User login/registration
+Secure cookies & JWT-based auth
+Route protection middleware
+🚀 Phase 2: Inventory Management (Start Now)
+💡 Goal: Allow users to manage inventory, add/edit products, set stock levels.
+✅ Steps:
+1️⃣ Create Inventory Entity & Migration (TypeORM)
+2️⃣ API for CRUD Operations (Create, Read, Update, Delete Products)
+3️⃣ Stock Level & Quantity Tracking
+4️⃣ Categories & Tags for Products
+5️⃣ UI Dashboard to View Inventory
+
+🔥 Phase 3: Supply Chain Tracking
+💡 Goal: Track orders, suppliers, and shipments
+✅ Steps:
+1️⃣ Create Order & Supplier Entities
+2️⃣ Supplier Management (CRUD APIs & UI)
+3️⃣ Shipment Tracking System
+4️⃣ Integration with Barcode Scanner for Incoming Stock
+
+📦 Phase 4: Advanced Features & SaaS Setup
+💡 Goal: Enable multi-tenant support, advanced reporting, & automation
+✅ Steps:
+1️⃣ Multi-Tenant SaaS Setup (Separate data for businesses)
+2️⃣ Reporting & Analytics (Sales, Low Stock, Alerts)
+3️⃣ Role-Based Access (Admin, Manager, Staff)
+4️⃣ Email & Web Push Notifications
+5️⃣ Payment Gateway Integration (For SaaS subscription plans)
+
+🛠️ Phase 5: Optimization & Deployment
+💡 Goal: Make the system scalable, fast, and production-ready
+✅ Steps:
+1️⃣ Performance Optimizations (Indexes, Query Optimizations)
+2️⃣ Security Enhancements (Rate Limiting, CSRF, XSS Protections)
+3️⃣ Docker & Cloud Deployment (CI/CD Pipelines, Logging, Monitoring)
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
