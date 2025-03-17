@@ -6,7 +6,7 @@
 Your Inventory & Supply Chain Tracker SaaS is designed to help businesses manage inventory, track supply chains, and optimize stock levels efficiently.
 
 ### 🚀 Core Features:
-1️⃣ Authentication & Security (Login, Tokens, Role Management) ✅ (Completed Phase 1, Moving to Phase 2)
+1️⃣ Authentication & Security (Login, Tokens, Role Management) ✅ (Completed Phase 1, Moving to Phase 2)<br>
 2️⃣ Inventory Management (Products, Stock Levels, Categories, Alerts)
 3️⃣ Supply Chain Tracking (Orders, Suppliers, Shipment Tracking)
 4️⃣ Barcode Scanning & SKU System (Scan & Manage Inventory Fast)(Optional)
