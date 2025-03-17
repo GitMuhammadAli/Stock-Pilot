@@ -3,9 +3,9 @@
 ## 📌 Project Overview
 
 ### 💡 Purpose:
-Your Inventory & Supply Chain Tracker SaaS is designed to help businesses manage inventory, track supply chains, and optimize stock levels efficiently.
+Your Inventory & Supply Chain Tracker SaaS is designed to help businesses manage inventory, track supply chains, and optimize stock levels efficiently.<br>
 
-### 🚀 Core Features:
+### 🚀 Core Features:<br>
 1️⃣ Authentication & Security (Login, Tokens, Role Management) ✅ (Completed Phase 1, Moving to Phase 2)<br>
 2️⃣ Inventory Management (Products, Stock Levels, Categories, Alerts)<br>
 3️⃣ Supply Chain Tracking (Orders, Suppliers, Shipment Tracking)<br>
@@ -16,31 +16,31 @@ Your Inventory & Supply Chain Tracker SaaS is designed to help businesses manage
 8️⃣ Notifications & Real-time Updates (Web-push, Email Alerts)<br>
 
 
-## 📌 Roadmap & Development Flow
+## 📌 Roadmap & Development Flow<br>
 
-### ✅ Phase 1: Authentication & Security (Completed)
+### ✅ Phase 1: Authentication & Security (Completed)<br>
 - User login/registration<br>
 - Secure cookies & JWT-based auth<br>
 - Route protection middleware<br>
 
-### 🚀 Phase 2: Inventory Management (Start Now)
-💡 **Goal:** Allow users to manage inventory, add/edit products, set stock levels.
-✅ **Steps:**
+### 🚀 Phase 2: Inventory Management (Start Now)<br>
+💡 **Goal:** Allow users to manage inventory, add/edit products, set stock levels.<br>
+✅ **Steps:**<br>
 1️⃣ Create Inventory Entity & Migration (TypeORM)<br>
 2️⃣ API for CRUD Operations (Create, Read, Update, Delete Products)<br>
 3️⃣ Stock Level & Quantity Tracking<br>
 4️⃣ Categories & Tags for Products<br>
 5️⃣ UI Dashboard to View Inventory<br>
 
-### 🔥 Phase 3: Supply Chain Tracking
-💡 **Goal:** Track orders, suppliers, and shipments
+### 🔥 Phase 3: Supply Chain Tracking<br>
+💡 **Goal:** Track orders, suppliers, and shipments<br>
 ✅ **Steps:**<br>
 1️⃣ Create Order & Supplier Entities<br>
 2️⃣ Supplier Management (CRUD APIs & UI)<br>
 
 
-### 📦 Phase 4: Advanced Features & SaaS Setup(Optional)
-💡 **Goal:** Enable multi-tenant support, advanced reporting, & automation
+### 📦 Phase 4: Advanced Features & SaaS Setup(Optional)<br>
+💡 **Goal:** Enable multi-tenant support, advanced reporting, & automation<br>
 ✅ **Steps:**<br>
 1️⃣ Multi-Tenant SaaS Setup (Separate data for businesses)(Optional)<br>
 2️⃣ Reporting & Analytics (Sales, Low Stock, Alerts)<br>
