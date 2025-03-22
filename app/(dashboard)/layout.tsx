@@ -1,4 +1,7 @@
-import ProtectedRoute from '@/components/ProtectedRoute';
+import ProtectedRoute from "@/components/ProtectedRoute";
+
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 
 export default function DashboardLayout({
   children,
@@ -7,7 +10,12 @@ export default function DashboardLayout({
 }) {
   return (
     <ProtectedRoute>
-      <main>{children}</main>
+      <SidebarProvider>
+        <AppSidebar />
+        {/* <SidebarTrigger /> */}
+        {/* <Sidebar /> */}
+        <main>{children}</main>
+      </SidebarProvider>
     </ProtectedRoute>
   );
 }

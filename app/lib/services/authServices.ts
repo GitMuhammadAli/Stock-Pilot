@@ -1,4 +1,3 @@
-import { DataSource } from "typeorm";
 import { User } from "@/db/entities/User";
 import { Repository } from "typeorm";
 import { AppDataSource } from "@/db/data-source";
@@ -84,17 +83,14 @@ export class AuthService {
         };
       }
 
-      // Generate verification token
       const token = crypto.randomBytes(32).toString('hex');
       user.verificationToken = token;
       user.verificationTokenExpiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
       await this.userRepo.save(user);
 
-      // Generate verification link
       const baseUrl = process.env.PORT_LINK || 'http://localhost:7700';
       const verificationLink = `${baseUrl}/api/auth/verify?token=${token}`;
 
-      // Send verification email
       await sendVerificationLink(email, verificationLink);
 
       return { 
@@ -125,13 +121,11 @@ export class AuthService {
         return { success: false, message: "Verification token has expired." };
       }
 
-      // Update user as verified
       user.isVerified = true;
       user.verificationToken = undefined;
       user.verificationTokenExpiresAt = undefined;
       await this.userRepo.save(user);
 
-      // Create JWT token
       const jwtToken = signJwt({
         userId: user.id,
         email: user.email,

@@ -8,7 +8,7 @@ import { Loader2, CheckCircle, XCircle } from "lucide-react";
 
 export default function CompleteLoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  // const { login } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Completing your login...');
 
@@ -19,7 +19,7 @@ export default function CompleteLoginPage() {
         const data = await response.json();
         
         if (data.authenticated) {
-          login(data.token);
+          // login(data.token);
           setStatus('success');
           setMessage('Login successful! Redirecting to dashboard...');
           
@@ -37,7 +37,7 @@ export default function CompleteLoginPage() {
     };
     
     completeLogin();
-  }, [login, router]);
+  }, [router]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-bg-primary p-4">

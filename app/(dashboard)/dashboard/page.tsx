@@ -2,16 +2,34 @@
 
 import { useAuth } from "@/providers/AuthProvider";
 import LogoutButton from "@/components/logout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Mail, Shield } from "lucide-react";
+import React, { useState } from 'react'
+
+import { LayoutDashboard, Warehouse, Package, BarChart2, FileText, Settings, Users, Menu, X, Bell, Search, ChevronDown, LogOut, CreditCard, HelpCircle, User, Shield, Zap, Clock, AlertTriangle, DollarSign, TrendingUp, Filter, Download, QrCode, Repeat, Plus, Calendar, CheckCircle, RefreshCw, MoreHorizontal, ChevronRight, Star, Layers, Truck, Clipboard, PieChart, ArrowUpRight, ArrowDownRight,Mail } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu"
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
-
+    
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-primary">Dashboard</h1>
-      
+    <div className="mx-auto">
+      {/* <h1 className="text-2xl font-bold mb-6 text-primary">Dashboard</h1> */}
+      <div className="flex space-x-4">
+
+       
       {/* User Profile Card */}
       <Card className="mb-8 bg-bg-secondary border-none shadow-md">
         <CardHeader>
@@ -58,6 +76,7 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
+      </div>
       
    
     </div>

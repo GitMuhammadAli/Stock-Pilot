@@ -38,7 +38,8 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased ${inter.className}`}
       >
         <AuthProvider>
-          {children}
+        
+        {children}
         </AuthProvider>
       </body>
     </html>
