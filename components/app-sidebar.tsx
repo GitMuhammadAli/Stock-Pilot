@@ -72,7 +72,7 @@ export function AppSidebar() {
               </Link>
             </li>
             <li>
-              <Link href="/warehouses">
+              <Link href="/warehouse">
                 <Button
                   variant="ghost"
                   className={`w-full justify-start ${sidebarOpen ? '' : 'justify-center'} ${pathname === '/warehouses' ? 'bg-bg-tertiary' : ''}`}

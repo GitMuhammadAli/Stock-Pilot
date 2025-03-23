@@ -36,6 +36,7 @@ export async function GET(req: NextRequest) {
   try {
     // Read the token from HTTP-only cookie
     const token = req.cookies.get('authToken')?.value;
+    const user = null;
     
     if (!token) {
       return NextResponse.json({
@@ -47,6 +48,8 @@ export async function GET(req: NextRequest) {
     // Verify the token
     const decoded = verifyJwt(token);
     
+    
+
     return NextResponse.json({
       authenticated: true,
       user: decoded
