@@ -93,6 +93,7 @@ export class WarehouseService {
 
   async getWarehouseById(id: string): Promise<WarehouseResponse> {
     try {
+      console.log("ware house id is ", id)
       const warehouse = await this.warehouseRepo.findOne({
         where: { id },
         relations: ['createdBy'],

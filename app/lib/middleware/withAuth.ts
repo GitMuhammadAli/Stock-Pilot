@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authMiddleware } from "./authMiddleware";
 
-type ApiHandler = (req: NextRequest, res: NextResponse, user: any) => Promise<NextResponse> | NextResponse;
+type ApiHandler = (req: NextRequest, res: NextResponse<unknown>, user: any) => Promise<NextResponse> | NextResponse;
 
 export const withAuth = (handler: ApiHandler): ApiHandler => {
   return async (req: NextRequest, res: NextResponse) => {

@@ -11,6 +11,7 @@ const geistSans = Geist({
 
 import type React from "react"
 import { Inter } from "next/font/google"
+import { WarehouseProvider } from "./providers/wareHouseProvider";
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -38,8 +39,10 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased ${inter.className}`}
       >
         <AuthProvider>
-        
+          <WarehouseProvider>
+
         {children}
+          </WarehouseProvider>
         </AuthProvider>
       </body>
     </html>

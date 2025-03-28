@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Bell, Search, LogOut, User } from "lucide-react"
 
 export default function LogoutButton() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -18,7 +19,6 @@ export default function LogoutButton() {
       });
       
       if (response.ok) {
-        // Redirect to login page
         router.push("/login");
       } else {
         console.error("Logout failed");
@@ -34,9 +34,9 @@ export default function LogoutButton() {
     <button
       onClick={handleLogout}
       disabled={isLoggingOut}
-      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded disabled:opacity-50"
+      className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-8 py-2 rounded disabled:opacity-50"
     >
+      <LogOut className="h-4 w-4" />
       {isLoggingOut ? "Logging out..." : "Logout"}
     </button>
-  );
-}
+  );}

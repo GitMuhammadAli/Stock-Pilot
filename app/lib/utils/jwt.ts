@@ -12,7 +12,7 @@ const getSecretKey = () => {
 
 // Create a JWT token
 export function signJwt(payload: any) {
-  return jwt.sign(payload, getSecretKey(), { expiresIn: '7d' });
+  return jwt.sign(payload, getSecretKey(), { expiresIn: '30d' });
 }
 
 // Verify a JWT token
