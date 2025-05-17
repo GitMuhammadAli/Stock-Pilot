@@ -81,9 +81,9 @@ export function WarehouseProvider({ children }: { children: ReactNode }) {
                     'Content-Type': 'application/json',
                 },
             });
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
                 setWarehouses(result.data);
             } else {
@@ -108,9 +108,9 @@ export function WarehouseProvider({ children }: { children: ReactNode }) {
                     'Content-Type': 'application/json',
                 },
             });
-            
+
             const result = await response.json();
-            
+
             console.log(result)
             if (result.success) {
                 setWarehouses(result.data.data);
@@ -136,9 +136,9 @@ export function WarehouseProvider({ children }: { children: ReactNode }) {
                     'Content-Type': 'application/json',
                 },
             });
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
                 return result.data;
             } else {
@@ -166,9 +166,9 @@ export function WarehouseProvider({ children }: { children: ReactNode }) {
                 },
                 body: JSON.stringify(data),
             });
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
                 // Add the new warehouse to the state
                 setWarehouses(prev => [...prev, result.data]);
@@ -198,22 +198,22 @@ export function WarehouseProvider({ children }: { children: ReactNode }) {
                 },
                 body: JSON.stringify(data),
             });
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
                 // Update the warehouse in the state
-                setWarehouses(prev => 
-                    prev.map(warehouse => 
+                setWarehouses(prev =>
+                    prev.map(warehouse =>
                         warehouse.id === id ? { ...warehouse, ...result.data } : warehouse
                     )
                 );
-                
+
                 // Update selected warehouse if it's the one being edited
                 if (selectedWarehouse && selectedWarehouse.id === id) {
                     setSelectedWarehouse({ ...selectedWarehouse, ...result.data });
                 }
-                
+
                 return true;
             } else {
                 setError(result.message || 'Failed to update warehouse');
@@ -239,18 +239,18 @@ export function WarehouseProvider({ children }: { children: ReactNode }) {
                     'Content-Type': 'application/json',
                 },
             });
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
                 // Remove the warehouse from the state
                 setWarehouses(prev => prev.filter(warehouse => warehouse.id !== id));
-                
+
                 // Clear selected warehouse if it's the one being deleted
                 if (selectedWarehouse && selectedWarehouse.id === id) {
                     setSelectedWarehouse(null);
                 }
-                
+
                 return true;
             } else {
                 setError(result.message || 'Failed to delete warehouse');

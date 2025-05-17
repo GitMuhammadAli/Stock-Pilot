@@ -8,6 +8,27 @@
   --background-end-rgb: 28, 35, 51;
 }
 
+
+/* Add these to your global CSS */
+.contain-layout {
+  contain: layout;
+}
+
+.contain-paint {
+  contain: paint;
+}
+
+.contain-strict {
+  contain: strict;
+}
+
+/* Prevent FOUC (Flash of Unstyled Content) */
+html {
+  visibility: visible;
+  opacity: 1;
+}
+
+
 /* Add responsive viewport meta for proper scaling */
 @layer base {
   html {

@@ -1,48 +1,44 @@
-import { WareHouse } from "@/db/entities/wareHouse";
+import { Product } from "@/db/entities/products";
 import { AppDataSource } from "@/db/data-source";
 import { Repository } from "typeorm";
 import { User } from "@/db/entities/User";
 
-interface CreateWarehouseData {
+interface CreateProductData {
   name: string;
-  location: string;
   description?: string;
-  capacity: number;
-  contactPhone?: string;
-  contactEmail?: string;
-  createdById: string;
+  quantity: number;
+  price: number;
+  category?: string;
+  userId: string;
 }
 
-interface UpdateWarehouseData {
+interface UpdateProductData {
   name?: string;
-  location?: string;
   description?: string;
-  isActive?: boolean;
-  capacity?: number;
-  currentOccupancy?: number;
-  contactPhone?: string;
-  contactEmail?: string;
+  quantity?: number;
+  price?: number;
+  category?: string;
 }
 
-interface WarehouseResponse {
+interface ProductResponse {
   success: boolean;
   message: string;
-  data?: WareHouse | WareHouse[];
-  error?:any;
+  data?: Product | Product[];
+  error?: any;
 }
 
-export class WarehouseService {
-  private warehouseRepo: Repository<WareHouse>;
+export class ProductService {
+  private productRepo: Repository<Product>;
   private userRepo: Repository<User>;
 
   constructor() {
-    this.warehouseRepo = AppDataSource.getRepository(WareHouse);
+    this.productRepo = AppDataSource.getRepository(Product);
     this.userRepo = AppDataSource.getRepository(User);
   }
 
-  async createWarehouse(data: CreateWarehouseData): Promise<WarehouseResponse> {
+  async createProduct(data: CreateProductData): Promise<ProductResponse> {
     try {
-      const user = await this.userRepo.findOne({ where: { id: data.createdById } });
+      const user = await this.userRepo.findOne({ where: { id: data.userId } });
       if (!user) {
         return {
           success: false,
@@ -50,182 +46,150 @@ export class WarehouseService {
         };
       }
 
-      const warehouse = this.warehouseRepo.create({
-        ...data,
-        createdBy: user,
+      const product = this.productRepo.create({
+        name: data.name,
+        description: data.description,
+        quantity: data.quantity,
+        price: data.price,
+        category: data.category,
+        user: user,
       });
 
-      await this.warehouseRepo.save(warehouse);
+      await this.productRepo.save(product);
 
       return {
         success: true,
-        message: "Warehouse created successfully",
-        data: warehouse,
+        message: "Product created successfully",
+        data: product,
       };
     } catch (error) {
       return {
         success: false,
-        message: "An error occurred while creating the warehouse",
-        error:error
+        message: "An error occurred while creating the product",
+        error: error
       };
     }
   }
 
-  async getAllWarehouses(): Promise<WarehouseResponse> {
+  async getAllProducts(): Promise<ProductResponse> {
     try {
-      const warehouses = await this.warehouseRepo.find({
-        relations: ['createdBy'],
+      const products = await this.productRepo.find({
+        relations: ['user'],
       });
 
       return {
         success: true,
-        message: "Warehouses retrieved successfully",
-        data: warehouses,
+        message: "Products retrieved successfully",
+        data: products,
       };
     } catch (error) {
-      console.error("Error retrieving warehouses:", error);
+      console.error("Error retrieving products:", error);
       return {
         success: false,
-        message: "An error occurred while retrieving warehouses",
+        message: "An error occurred while retrieving products",
       };
     }
   }
 
-  async getWarehouseById(id: string): Promise<WarehouseResponse> {
+  async getProductById(id: string): Promise<ProductResponse> {
     try {
-      console.log("ware house id is ", id)
-      const warehouse = await this.warehouseRepo.findOne({
+      const product = await this.productRepo.findOne({
         where: { id },
-        relations: ['createdBy'],
+        relations: ['user'],
       });
 
-      if (!warehouse) {
+      if (!product) {
         return {
           success: false,
-          message: "Warehouse not found",
+          message: "Product not found",
         };
       }
 
       return {
         success: true,
-        message: "Warehouse retrieved successfully",
-        data: warehouse,
+        message: "Product retrieved successfully",
+        data: product,
       };
     } catch (error) {
-      console.error("Error retrieving warehouse:", error);
+      console.error("Error retrieving product:", error);
       return {
         success: false,
-        message: "An error occurred while retrieving the warehouse",
+        message: "An error occurred while retrieving the product",
       };
     }
   }
 
-  async updateWarehouse(id: string, data: UpdateWarehouseData): Promise<WarehouseResponse> {
+  async updateProduct(id: string, data: UpdateProductData): Promise<ProductResponse> {
     try {
-      const warehouse = await this.warehouseRepo.findOne({ where: { id } });
+      const product = await this.productRepo.findOne({ where: { id } });
 
-      if (!warehouse) {
+      if (!product) {
         return {
           success: false,
-          message: "Warehouse not found",
+          message: "Product not found",
         };
       }
 
-      Object.assign(warehouse, data);
-      await this.warehouseRepo.save(warehouse);
+      Object.assign(product, data);
+      await this.productRepo.save(product);
 
       return {
         success: true,
-        message: "Warehouse updated successfully",
-        data: warehouse,
+        message: "Product updated successfully",
+        data: product,
       };
     } catch (error) {
-      console.error("Error updating warehouse:", error);
+      console.error("Error updating product:", error);
       return {
         success: false,
-        message: "An error occurred while updating the warehouse",
+        message: "An error occurred while updating the product",
       };
     }
   }
 
-  async deleteWarehouse(id: string): Promise<WarehouseResponse> {
+  async deleteProduct(id: string): Promise<ProductResponse> {
     try {
-      const warehouse = await this.warehouseRepo.findOne({ where: { id } });
+      const product = await this.productRepo.findOne({ where: { id } });
 
-      if (!warehouse) {
+      if (!product) {
         return {
           success: false,
-          message: "Warehouse not found",
+          message: "Product not found",
         };
       }
 
-      await this.warehouseRepo.remove(warehouse);
+      await this.productRepo.remove(product);
 
       return {
         success: true,
-        message: "Warehouse deleted successfully",
+        message: "Product deleted successfully",
       };
     } catch (error) {
-      console.error("Error deleting warehouse:", error);
+      console.error("Error deleting product:", error);
       return {
         success: false,
-        message: "An error occurred while deleting the warehouse",
+        message: "An error occurred while deleting the product",
       };
     }
   }
 
-  async getWarehousesByUser(userId: string): Promise<WarehouseResponse> {
+  async getProductsByUser(userId: string): Promise<ProductResponse> {
     try {
-      const warehouses = await this.warehouseRepo.find({
-        where: { createdById: userId },
-        relations: ['createdBy'],
+      const products = await this.productRepo.find({
+        where: { user: { id: userId } },
+        relations: ['user'],
       });
 
       return {
         success: true,
-        message: "Warehouses retrieved successfully",
-        data: warehouses,
+        message: "Products retrieved successfully",
+        data: products,
       };
     } catch (error) {
-      console.error("Error retrieving user warehouses:", error);
+      console.error("Error retrieving user products:", error);
       return {
         success: false,
-        message: "An error occurred while retrieving user warehouses",
-      };
-    }
-  }
-
-  async updateWarehouseOccupancy(id: string, newOccupancy: number): Promise<WarehouseResponse> {
-    try {
-      const warehouse = await this.warehouseRepo.findOne({ where: { id } });
-
-      if (!warehouse) {
-        return {
-          success: false,
-          message: "Warehouse not found",
-        };
-      }
-
-      if (newOccupancy > warehouse.capacity) {
-        return {
-          success: false,
-          message: "New occupancy exceeds warehouse capacity",
-        };
-      }
-
-      warehouse.currentOccupancy = newOccupancy;
-      await this.warehouseRepo.save(warehouse);
-
-      return {
-        success: true,
-        message: "Warehouse occupancy updated successfully",
-        data: warehouse,
-      };
-    } catch (error) {
-      console.error("Error updating warehouse occupancy:", error);
-      return {
-        success: false,
-        message: "An error occurred while updating warehouse occupancy",
+        message: "An error occurred while retrieving user products",
       };
     }
   }

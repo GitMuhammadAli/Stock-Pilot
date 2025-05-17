@@ -3,6 +3,7 @@ import { DataSource } from "typeorm";
 import { User  } from "./entities/User";
 import { WareHouse } from "./entities/wareHouse";
 import path from "path";
+import { Product } from "./entities/products";
 export const AppDataSource = new DataSource({
   type: "postgres",
   host: process.env.DB_HOST || "localhost",
@@ -12,7 +13,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME || "inventoryDb",
   // entities: [path.join(__dirname, "entities", "*.{ts,js}")], 
   synchronize: true,
-  entities: [User , WareHouse], 
+  entities: [User , WareHouse , Product], 
   migrations: [path.join(__dirname, "migrations", "*.{ts,js}")], 
   logging: process.env.NODE_ENV === "development",
 });

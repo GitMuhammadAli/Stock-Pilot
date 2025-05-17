@@ -45,11 +45,7 @@ export default function Login() {
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    // Set loading state
     setIsLoading(true)
-    
-    await new Promise(resolve => requestAnimationFrame(resolve));
     
     try {
       const response = await fetch("/api/auth/login", {
@@ -61,7 +57,6 @@ export default function Login() {
       });
 
       const data = await response.json();
-      console.log("Data for login is", data);
       
       if (!response.ok) {
         throw new Error(data.message || "Failed to send login link");
@@ -93,23 +88,6 @@ export default function Login() {
       setIsLoading(false);
     }
   }, [email, router]);
-
-  const LoadingButton = () => (
-    <Button
-      type="submit"
-      className="w-full bg-brand-primary text-bg-primary hover:bg-brand-primary-hover"
-      disabled={isLoading}
-    >
-      {isLoading ? (
-        <div className="flex items-center justify-center">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none" />
-          <span>Sending Link</span>
-        </div>
-      ) : (
-        "Send Login Link"
-      )}
-    </Button>
-  );
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
@@ -145,8 +123,20 @@ export default function Login() {
                 />
               </div>
             </div>
-            <LoadingButton />
-          </form>
+            <Button
+              type="submit"
+              className="w-full bg-brand-primary text-bg-primary hover:bg-brand-primary-hover"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <span className="visually-hidden">Sending Link</span>
+                </>
+              ) : (
+                "Send Login Link"
+              )}
+            </Button>          </form>
 
           {message && (
             <Alert

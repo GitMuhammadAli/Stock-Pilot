@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany } from "typeorm";
+import { Product } from "./products";
 
 export enum UserRole {
     ADMIN = "admin",
@@ -25,12 +26,19 @@ export class User {
     @Column({ type: "enum", enum: UserRole, default: UserRole.STAFF })
     role!: UserRole;
 
+    // @ManyToMany(()=> Product , (product)=>product.user)
+    // products!:Product[];
+
+    @ManyToMany(() => Product,            (product: { user: any; }) => product.user)
+products!: any[];
+
     @Column({ default: false })
     isVerified!: boolean;
 
     @CreateDateColumn()
     createdAt!: Date;
     
+
     @UpdateDateColumn()
     updatedAt!: Date;
 }
