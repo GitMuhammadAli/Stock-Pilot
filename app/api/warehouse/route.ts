@@ -14,7 +14,6 @@ async function handler(req: NextRequest, res: NextResponse, user: any) {
     if (!userId) {
         return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
-    console.log("userId" ,  userId)
 
     if(req.method === "POST"){
         const body = await req.json();

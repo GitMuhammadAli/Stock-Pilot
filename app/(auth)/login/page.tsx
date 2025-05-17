@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -43,10 +43,14 @@ export default function Login() {
     }
   }, [message]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Set loading state
     setIsLoading(true)
-
+    
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -57,31 +61,58 @@ export default function Login() {
       });
 
       const data = await response.json();
+      console.log("Data for login is", data);
+      
       if (!response.ok) {
         throw new Error(data.message || "Failed to send login link");
       }
       
-      setMessage({ 
-        type: "success", 
-        text: "Check your email for the login link! It will expire in 30 minutes." 
-      })
-      // Clear the form
-      setEmail("")
-      setTimeout(() => {
-                router.push('/verify')
-              }, 4000);
+      if (data.success) {
+        setMessage({ 
+          type: "success", 
+          text: data.message || "Check your email for the login link! It will expire in 30 minutes." 
+        });
+        
+        setEmail("");
+        
+        setTimeout(() => {
+          router.push('/verify');
+        }, 4000);
+      } else {
+        setMessage({ 
+          type: "error", 
+          text: data.message || "Failed to send login link" 
+        });
+      }
     } catch (error) {
       setMessage({ 
         type: "error", 
         text: error instanceof Error ? error.message : "Failed to send login link. Please try again." 
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  }, [email, router]);
+
+  const LoadingButton = () => (
+    <Button
+      type="submit"
+      className="w-full bg-brand-primary text-bg-primary hover:bg-brand-primary-hover"
+      disabled={isLoading}
+    >
+      {isLoading ? (
+        <div className="flex items-center justify-center">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none" />
+          <span>Sending Link</span>
+        </div>
+      ) : (
+        "Send Login Link"
+      )}
+    </Button>
+  );
 
   return (
-    <div className="flex items-center justify-center min-h-screen  p-4">
+    <div className="flex items-center justify-center min-h-screen p-4">
       <Card className="w-full max-w-md bg-bg-secondary border-none shadow-xl">
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
@@ -110,23 +141,11 @@ export default function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="pl-10 bg-bg-tertiary border-none text-primary"
+                  disabled={isLoading}
                 />
               </div>
             </div>
-            <Button
-              type="submit"
-              className="w-full bg-brand-primary text-bg-primary hover:bg-brand-primary-hover"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending Link
-                </>
-              ) : (
-                "Send Login Link"
-              )}
-            </Button>
+            <LoadingButton />
           </form>
 
           {message && (

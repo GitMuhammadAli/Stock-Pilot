@@ -75,8 +75,8 @@ export class AuthService {
   async login({ email }: LoginData): Promise<LoginResponse> {
     try {
       let user = await this.userRepo.findOne({ where: { email } });
-
-      if (!user) {
+console.log(user)
+      if (user == null) {
         return {
           success: false,
           message: "Please register with your active email first.",

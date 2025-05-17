@@ -16,16 +16,16 @@ import Link from "next/link"
 // import { useUserStore } from "@/lib/store"
 import { useAuth } from "@/providers/AuthProvider";
 import LogoutButton from "@/components/logout";
-
-
+import { SidebarTrigger } from "./ui/sideBarTrigger"
 
 export default function TopBar() {
   const [searchQuery, setSearchQuery] = useState("")
   const { user, isAuthenticated } = useAuth();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   return (
     <div className="bg-[#1C2333] p-4 flex items-center justify-between border-b border-[#2C3444]">
-      <div className="flex items-center flex-1 ml-2 md:ml-0">
+        <div className="flex items-center flex-1 ml-2 md:ml-0">
         <Search className="h-5 w-5 text-gray-400 mr-2" />
         <Input
           type="search"

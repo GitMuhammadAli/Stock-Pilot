@@ -82,7 +82,8 @@ export default function WarehousesPage() {
         description: '',
         capacity: 0,
         contactPhone: '',
-        contactEmail: ''
+        contactEmail: '',
+        
       });
     } else {
       toast({
@@ -144,82 +145,82 @@ export default function WarehousesPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-semibold">Warehouse Management</h1>
+    <div className="p-4 md:p-8">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        <h1 className="text-2xl md:text-3xl font-semibold">Warehouse Management</h1>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>Add Warehouse</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="w-[95vw] max-w-[600px] md:w-full">
             <DialogHeader>
               <DialogTitle>Create New Warehouse</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreateSubmit}>
               <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">Name</Label>
+                <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className="md:text-right">Name</Label>
                   <Input
                     id="name"
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="col-span-3"
+                    className="md:col-span-3"
                     required
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="location" className="text-right">Location</Label>
+                <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+                  <Label htmlFor="location" className="md:text-right">Location</Label>
                   <Input
                     id="location"
                     name="location"
                     value={formData.location}
                     onChange={handleInputChange}
-                    className="col-span-3"
+                    className="md:col-span-3"
                     required
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="description" className="text-right">Description</Label>
+                <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+                  <Label htmlFor="description" className="md:text-right">Description</Label>
                   <Textarea
                     id="description"
                     name="description"
                     value={formData.description}
                     onChange={handleInputChange}
-                    className="col-span-3"
+                    className="md:col-span-3"
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="capacity" className="text-right">Capacity</Label>
+                <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+                  <Label htmlFor="capacity" className="md:text-right">Capacity</Label>
                   <Input
                     id="capacity"
                     name="capacity"
                     type="number"
                     value={formData.capacity}
                     onChange={handleInputChange}
-                    className="col-span-3"
+                    className="md:col-span-3"
                     required
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="contactPhone" className="text-right">Contact Phone</Label>
+                <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+                  <Label htmlFor="contactPhone" className="md:text-right">Contact Phone</Label>
                   <Input
                     id="contactPhone"
                     name="contactPhone"
                     value={formData.contactPhone}
                     onChange={handleInputChange}
-                    className="col-span-3"
+                    className="md:col-span-3"
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="contactEmail" className="text-right">Contact Email</Label>
+                <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+                  <Label htmlFor="contactEmail" className="md:text-right">Contact Email</Label>
                   <Input
                     id="contactEmail"
                     name="contactEmail"
                     type="email"
                     value={formData.contactEmail}
                     onChange={handleInputChange}
-                    className="col-span-3"
+                    className="md:col-span-3"
                   />
                 </div>
               </div>
@@ -238,26 +239,26 @@ export default function WarehousesPage() {
         <CardHeader>
           <CardTitle>Warehouses</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Capacity</TableHead>
-                <TableHead>Current Occupancy</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="whitespace-nowrap">Name</TableHead>
+                <TableHead className="whitespace-nowrap">Location</TableHead>
+                <TableHead className="whitespace-nowrap">Capacity</TableHead>
+                <TableHead className="whitespace-nowrap">Current Occupancy</TableHead>
+                <TableHead className="whitespace-nowrap">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {warehouses.length > 0 ? (
                 warehouses.map((warehouse) => (
                   <TableRow key={warehouse.id}>
-                    <TableCell>{warehouse.name}</TableCell>
-                    <TableCell>{warehouse.location}</TableCell>
-                    <TableCell>{warehouse.capacity}</TableCell>
-                    <TableCell>{warehouse.currentOccupancy}</TableCell>
-                    <TableCell className="flex space-x-2">
+                    <TableCell className="whitespace-nowrap">{warehouse.name}</TableCell>
+                    <TableCell className="whitespace-nowrap">{warehouse.location}</TableCell>
+                    <TableCell className="whitespace-nowrap">{warehouse.capacity}</TableCell>
+                    <TableCell className="whitespace-nowrap">{warehouse.currentOccupancy}</TableCell>
+                    <TableCell className="flex flex-wrap gap-2">
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -296,75 +297,75 @@ export default function WarehousesPage() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] max-w-[600px] md:w-full">
           <DialogHeader>
             <DialogTitle>Edit Warehouse</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEditSubmit}>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-name" className="text-right">Name</Label>
+              <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-name" className="md:text-right">Name</Label>
                 <Input
                   id="edit-name"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="col-span-3"
+                  className="md:col-span-3"
                   required
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-location" className="text-right">Location</Label>
+              <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-location" className="md:text-right">Location</Label>
                 <Input
                   id="edit-location"
                   name="location"
                   value={formData.location}
                   onChange={handleInputChange}
-                  className="col-span-3"
+                  className="md:col-span-3"
                   required
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-description" className="text-right">Description</Label>
+              <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-description" className="md:text-right">Description</Label>
                 <Textarea
                   id="edit-description"
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
-                  className="col-span-3"
+                  className="md:col-span-3"
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-capacity" className="text-right">Capacity</Label>
+              <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-capacity" className="md:text-right">Capacity</Label>
                 <Input
                   id="edit-capacity"
                   name="capacity"
                   type="number"
                   value={formData.capacity}
                   onChange={handleInputChange}
-                  className="col-span-3"
+                  className="md:col-span-3"
                   required
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-contactPhone" className="text-right">Contact Phone</Label>
+              <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-contactPhone" className="md:text-right">Contact Phone</Label>
                 <Input
                   id="edit-contactPhone"
                   name="contactPhone"
                   value={formData.contactPhone}
                   onChange={handleInputChange}
-                  className="col-span-3"
+                  className="md:col-span-3"
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-contactEmail" className="text-right">Contact Email</Label>
+              <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-contactEmail" className="md:text-right">Contact Email</Label>
                 <Input
                   id="edit-contactEmail"
                   name="contactEmail"
                   type="email"
                   value={formData.contactEmail}
                   onChange={handleInputChange}
-                  className="col-span-3"
+                  className="md:col-span-3"
                 />
               </div>
             </div>
@@ -377,7 +378,7 @@ export default function WarehousesPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] max-w-[600px] md:w-full">
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
           </DialogHeader>
@@ -389,64 +390,63 @@ export default function WarehousesPage() {
         </DialogContent>
       </Dialog>
       
-            {/* View Dialog */}
-            <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Warehouse Details</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-bold">Name:</Label>
-                    <div className="col-span-3">{selectedWarehouse?.name}</div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-bold">Location:</Label>
-                    <div className="col-span-3">{selectedWarehouse?.location}</div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-bold">Description:</Label>
-                    <div className="col-span-3">{selectedWarehouse?.description}</div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-bold">Status:</Label>
-                    <div className="col-span-3">{selectedWarehouse?.isActive ? 'Active' : 'Inactive'}</div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-bold">Capacity:</Label>
-                    <div className="col-span-3">{selectedWarehouse?.capacity}</div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-bold">Current Occupancy:</Label>
-                    <div className="col-span-3">{selectedWarehouse?.currentOccupancy}</div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-bold">Contact Phone:</Label>
-                    <div className="col-span-3">{selectedWarehouse?.contactPhone}</div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-bold">Contact Email:</Label>
-                    <div className="col-span-3">{selectedWarehouse?.contactEmail}</div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-bold">Created By:</Label>
-                    <div className="col-span-3">{selectedWarehouse?.createdBy?.name}</div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-bold">Created At:</Label>
-                    <div className="col-span-3">{selectedWarehouse?.createdAt ? new Date(selectedWarehouse.createdAt).toLocaleString() : "N/A"}</div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right font-bold">Last Updated:</Label>
-                    <div className="col-span-3">{selectedWarehouse?.updatedAt ? new Date(selectedWarehouse.updatedAt).toLocaleString():"N/A"}</div>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>Close</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-      
+      {/* View Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="w-[95vw] max-w-[600px] md:w-full">
+          <DialogHeader>
+            <DialogTitle>Warehouse Details</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label className="md:text-right font-bold">Name:</Label>
+              <div className="md:col-span-3">{selectedWarehouse?.name}</div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label className="md:text-right font-bold">Location:</Label>
+              <div className="md:col-span-3">{selectedWarehouse?.location}</div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label className="md:text-right font-bold">Description:</Label>
+              <div className="md:col-span-3">{selectedWarehouse?.description}</div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label className="md:text-right font-bold">Status:</Label>
+              <div className="md:col-span-3">{selectedWarehouse?.isActive ? 'Active' : 'Inactive'}</div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label className="md:text-right font-bold">Capacity:</Label>
+              <div className="md:col-span-3">{selectedWarehouse?.capacity}</div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label className="md:text-right font-bold">Current Occupancy:</Label>
+              <div className="md:col-span-3">{selectedWarehouse?.currentOccupancy}</div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label className="md:text-right font-bold">Contact Phone:</Label>
+              <div className="md:col-span-3">{selectedWarehouse?.contactPhone}</div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label className="md:text-right font-bold">Contact Email:</Label>
+              <div className="md:col-span-3">{selectedWarehouse?.contactEmail}</div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label className="md:text-right font-bold">Created By:</Label>
+              <div className="md:col-span-3">{selectedWarehouse?.createdBy?.name}</div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label className="md:text-right font-bold">Created At:</Label>
+              <div className="md:col-span-3">{selectedWarehouse?.createdAt ? new Date(selectedWarehouse.createdAt).toLocaleString() : "N/A"}</div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label className="md:text-right font-bold">Last Updated:</Label>
+              <div className="md:col-span-3">{selectedWarehouse?.updatedAt ? new Date(selectedWarehouse.updatedAt).toLocaleString() : "N/A"}</div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
