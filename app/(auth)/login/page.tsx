@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { Spinner } from "@/components/ui/spinner"
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -12,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Mail, AlertCircle, Loader2 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/providers/AuthProvider"
+import { isatty } from "tty"
 
 export default function Login() {
   const [email, setEmail] = useState("")
@@ -28,8 +30,10 @@ export default function Login() {
     }
   }, [searchParams])
   
+  console.log(isAuthenticated)
   useEffect(() => {
     if (isAuthenticated) {
+      console.log(isAuthenticated)
       router.push('/dashboard')
     }
   }, [isAuthenticated, router])
@@ -130,7 +134,8 @@ export default function Login() {
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  {/* <Loader2 className="h-4 w-4 animate-spin mr-2" /> */}
+                  <Spinner size="lg" />
                   <span className="visually-hidden">Sending Link</span>
                 </>
               ) : (
