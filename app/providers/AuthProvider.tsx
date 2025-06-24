@@ -1,7 +1,8 @@
 // "use client";
 
-// import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+// import { createContext, useContext, useState, useEffect, useCallback } from "react";
 // import { useRouter, usePathname } from "next/navigation";
+
 
 // interface User {
 //   userId: string;
@@ -102,6 +103,9 @@
 // }
 
 
+
+
+
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
@@ -126,11 +130,27 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const publicRoutes = [
+  '/login',
+  '/register',
+  '/complete-login',
+  '/api',
+  '/_next',
+  '/favicon.ico',
+  '/verify',
+  '/',
+];
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+
+    const isPublicRoute = () => {
+    return publicRoutes.some(route => pathname?.startsWith(route)) || pathname === '/login';
+  };
 
   const checkAuth = useCallback(async () => {
     try {
@@ -145,14 +165,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (response.ok) {
         const userData = await response.json();
-        console.log("user", userData)
         if (userData.authenticated && userData.user) {
-          console.log("hey")
           setUser(userData.user);
           setIsAuthenticated(true);
         } else {
           setUser(null);
           setIsAuthenticated(false);
+           if (!isPublicRoute()) {
+            router.push('/login');
+          }
         }
       } else {
         setUser(null);
@@ -162,6 +183,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Auth check failed:', error);
       setUser(null);
       setIsAuthenticated(false);
+       if (!isPublicRoute()) {
+          router.push('/login');
+        }
     } finally {
       setIsLoading(false);
     }

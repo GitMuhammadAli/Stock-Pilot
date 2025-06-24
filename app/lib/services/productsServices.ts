@@ -9,6 +9,7 @@ interface CreateProductData {
   quantity: number;
   price: number;
   category?: string;
+  sku: string;
   userId: string;
 }
 
@@ -18,6 +19,7 @@ interface UpdateProductData {
   quantity?: number;
   price?: number;
   category?: string;
+  sku?: string;
 }
 
 interface ProductResponse {
@@ -52,7 +54,8 @@ export class ProductService {
         quantity: data.quantity,
         price: data.price,
         category: data.category,
-        user: user,
+        sku: data.sku,
+        createdBy: user,
       });
 
       await this.productRepo.save(product);
@@ -69,12 +72,11 @@ export class ProductService {
         error: error
       };
     }
-  }
 
-  async getAllProducts(): Promise<ProductResponse> {
+  }  async getAllProducts(): Promise<ProductResponse> {
     try {
       const products = await this.productRepo.find({
-        relations: ['user'],
+        relations: ['createdBy'],
       });
 
       return {
@@ -95,7 +97,7 @@ export class ProductService {
     try {
       const product = await this.productRepo.findOne({
         where: { id },
-        relations: ['user'],
+        relations: ['createdBy'],
       });
 
       if (!product) {
@@ -176,8 +178,8 @@ export class ProductService {
   async getProductsByUser(userId: string): Promise<ProductResponse> {
     try {
       const products = await this.productRepo.find({
-        where: { user: { id: userId } },
-        relations: ['user'],
+        where: { createdBy: { id: userId } },
+        relations: ['createdBy'],
       });
 
       return {

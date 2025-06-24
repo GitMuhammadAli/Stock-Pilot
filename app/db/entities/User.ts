@@ -26,8 +26,7 @@ export class User {
     @Column({ type: "enum", enum: UserRole, default: UserRole.STAFF })
     role!: UserRole;
 
-    // @ManyToMany(()=> Product , (product)=>product.user)
-    // products!:Product[];
+    
 
     @ManyToMany(() => Product,            (product: { user: any; }) => product.user)
 products!: any[];

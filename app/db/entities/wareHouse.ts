@@ -30,7 +30,6 @@ export class WareHouse {
     @Column({ nullable: true })
     contactEmail?: string;
 
-    // Relation to User - Many warehouses can be created by one user
     @ManyToOne(() => User, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'createdById' })
     createdBy!: User;

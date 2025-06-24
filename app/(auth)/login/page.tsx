@@ -134,8 +134,8 @@ export default function Login() {
             >
               {isLoading ? (
                 <>
-                  {/* <Loader2 className="h-4 w-4 animate-spin mr-2" /> */}
-                  <Spinner size="lg" />
+                  
+                  <Loader2 className="h-4 w-4  text-black animate-spin" />
                   <span className="visually-hidden">Sending Link</span>
                 </>
               ) : (

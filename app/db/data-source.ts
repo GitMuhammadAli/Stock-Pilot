@@ -4,6 +4,7 @@ import { User  } from "./entities/User";
 import { WareHouse } from "./entities/wareHouse";
 import path from "path";
 import { Product } from "./entities/products";
+import { Supplier } from "./entities/supplier";
 export const AppDataSource = new DataSource({
   type: "postgres",
   host: process.env.DB_HOST || "localhost",
@@ -13,7 +14,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME || "inventoryDb",
   // entities: [path.join(__dirname, "entities", "*.{ts,js}")], 
   synchronize: true,
-  entities: [User , WareHouse , Product], 
+  entities: [User , WareHouse , Product , Supplier], 
   migrations: [path.join(__dirname, "migrations", "*.{ts,js}")], 
   logging: process.env.NODE_ENV === "development",
 });

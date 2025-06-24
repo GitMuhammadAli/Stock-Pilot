@@ -1,28 +1,35 @@
-// import { NextRequest, NextResponse } from "next/server";
-// import { getProductsByUser, createProduct } from "@/app/lib/services/productServices";
-// import { verifyJWT } from "@/app/lib/utils/auth";
+import { withAuth } from "@/lib/middleware/withAuth";
+import { ProductService } from "@/lib/services/productsServices";
+import { connectDB } from "@/db/connectDb";
+import { NextRequest, NextResponse } from "next/server";
 
-// export async function GET(req: NextRequest) {
-//   try {
-//     const token = req.cookies.get("token")?.value;
-//     const decoded = verifyJWT(token);
+async function handler(req: NextRequest, res: NextResponse, user: any) {
+  try {
+    await connectDB();
+    const productService = new ProductService();
+    const userId = user.userId;
 
-//     const products = await getProductsByUser(decoded.userId);
-//     return NextResponse.json({ success: true, data: products });
-//   } catch (error) {
-//     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-//   }
-// }
+    if (!userId)
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
 
-// export async function POST(req: NextRequest) {
-//   try {
-//     const body = await req.json();
-//     const token = req.cookies.get("token")?.value;
-//     const decoded = verifyJWT(token);
+    if (req.method === "POST") {
+      const body = await req.json();
+      const product = await productService.createProduct({ ...body, createdById: userId });
+      return NextResponse.json({ success: true, data: product }, { status: 201 });
+    } else if (req.method === "GET") {
+      const products = await productService.getProductsByUser(userId);
+      return NextResponse.json({ success: true, data: products }, { status: 200 });
+    } else {
+      return NextResponse.json({ success: false, message: "Method Not Allowed" }, { status: 405 });
+    }
+  } catch (error) {
+    console.error("Product API Error:", error);
+    return NextResponse.json(
+      { success: false, message: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
+  }
+}
 
-//     const newProduct = await createProduct({ ...body, userId: decoded.userId });
-//     return NextResponse.json({ success: true, data: newProduct }, { status: 201 });
-//   } catch (error) {
-//     return NextResponse.json({ success: false, error: error.message }, { status: 400 });
-//   }
-// }
+export const GET = withAuth(handler);
+export const POST = withAuth(handler);
