@@ -117,6 +117,7 @@ export class OrderItemService {
       console.log("order item id is ", id)
       const orderItem = await this.orderItemRepo.findOne({
         where: { id },
+        relations: ['order', 'product'],
       });
 
       if (!orderItem) {
