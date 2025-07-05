@@ -1,6 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany } from "typeorm";
+import { Entity, OneToMany,PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany } from "typeorm";
 import { Product } from "./products";
-
 export enum UserRole {
     ADMIN = "admin",
     STAFF = "staff",
@@ -12,7 +11,7 @@ export class User {
     id!: string;
 
     @Column()
-    name!:string
+    name!: string;
 
     @Column({ unique: true })
     email!: string;
@@ -26,10 +25,9 @@ export class User {
     @Column({ type: "enum", enum: UserRole, default: UserRole.STAFF })
     role!: UserRole;
 
-    
+    @OneToMany(() => Product, product => product.createdBy)
+products!: Product[];
 
-    @ManyToMany(() => Product,            (product: { user: any; }) => product.user)
-products!: any[];
 
     @Column({ default: false })
     isVerified!: boolean;
@@ -37,7 +35,6 @@ products!: any[];
     @CreateDateColumn()
     createdAt!: Date;
     
-
     @UpdateDateColumn()
     updatedAt!: Date;
 }

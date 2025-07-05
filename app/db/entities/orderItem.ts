@@ -7,15 +7,15 @@ export class OrderItem {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @Column()
-    @ManyToOne(() => Order)
-    @JoinColumn({ name: "orderId" })
-    orderId!: string;
+  
+    @ManyToOne(() => Order, { onDelete: "CASCADE" })
+@JoinColumn({ name: "orderId" })
+order!: Order;
 
-    @Column()
-    @ManyToOne(() => Product)
-    @JoinColumn({ name: "productId" })
-    productId!: string;
+@ManyToOne(() => Product)
+@JoinColumn({ name: "productId" })
+product!: Product;
+
 
     @Column()
     quantity!: number;

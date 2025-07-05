@@ -8,6 +8,7 @@ import {
 } from "typeorm";
 import { User } from "./User";
 import { Supplier } from "./supplier";
+import { WareHouse } from "./wareHouse";
 
 @Entity()
 export class Product {
@@ -31,6 +32,14 @@ export class Product {
 
   @Column("decimal", { precision: 10, scale: 2 })
   price!: number;
+
+
+  @ManyToOne(() => WareHouse)
+warehouse!: WareHouse;
+
+@Column()
+warehouseId!: string;
+
 
   @ManyToOne(() => Supplier, (supplier) => supplier.products)
   supplier!: Supplier;
