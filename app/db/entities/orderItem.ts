@@ -7,15 +7,19 @@ export class OrderItem {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-  
-    @ManyToOne(() => Order, { onDelete: "CASCADE" })
-@JoinColumn({ name: "orderId" })
-order!: Order;
+    @ManyToOne(() => Order, order => order.id, { onDelete: "CASCADE" }) // Added inverse side if exists and onDelete options
+    @JoinColumn({ name: "orderId" })
+    order!: Order;
 
-@ManyToOne(() => Product)
-@JoinColumn({ name: "productId" })
-product!: Product;
+    @Column()
+    orderId!: string; // Added explicit foreign key
 
+    @ManyToOne(() => Product)
+    @JoinColumn({ name: "productId" })
+    product!: Product;
+
+    @Column()
+    productId!: string; // Added explicit foreign key
 
     @Column()
     quantity!: number;

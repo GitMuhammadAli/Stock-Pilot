@@ -5,9 +5,10 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from "typeorm";
-import { User } from "./User";
-import { Supplier } from "./supplier";
+import { User } from "./User"; 
+import { Supplier } from "./supplier"; 
 import { WareHouse } from "./wareHouse";
 
 @Entity()
@@ -19,7 +20,7 @@ export class Product {
   name!: string;
 
   @Column({ nullable: true })
-  description!: string;
+  description?: string; 
 
   @Column({ unique: true })
   sku!: string;
@@ -28,28 +29,31 @@ export class Product {
   quantity!: number;
 
   @Column({ nullable: true })
-  category!: string;
+  category?: string;
 
   @Column("decimal", { precision: 10, scale: 2 })
   price!: number;
 
-
   @ManyToOne(() => WareHouse)
-warehouse!: WareHouse;
+  @JoinColumn({ name: 'warehouseId' })
+  warehouse!: WareHouse;
+  @Column()
+  warehouseId!: string;
 
-@Column()
-warehouseId!: string;
-
-
-  @ManyToOne(() => Supplier, (supplier) => supplier.products)
+  @ManyToOne(() => Supplier)
+  @JoinColumn({ name: 'supplierId' })
   supplier!: Supplier;
+  @Column()
+  supplierId!: string;
 
-  @ManyToOne(() => User, (user) => user.id)
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'createdById' })
   createdBy!: User;
+  @Column()
+  createdById!: string;
 
   @CreateDateColumn()
   createdAt!: Date;
-  
-      @UpdateDateColumn()
-      updatedAt!: Date;
+  @UpdateDateColumn()
+  updatedAt!: Date;
 }

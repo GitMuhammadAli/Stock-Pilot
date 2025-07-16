@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from "typeorm";
 import { User } from "./User";
 import { Supplier } from "./supplier";
 import { WareHouse } from "./wareHouse";
@@ -22,26 +22,25 @@ export class Order {
     status!: OrderStatus;
 
     @ManyToOne(() => Supplier)
+    @JoinColumn({ name: 'supplierId' })
     supplier!: Supplier;
-
     @Column()
     supplierId!: string;
 
     @ManyToOne(() => WareHouse)
+    @JoinColumn({ name: 'warehouseId' })
     warehouse!: WareHouse;
-
     @Column()
     warehouseId!: string;
 
     @ManyToOne(() => User)
+    @JoinColumn({ name: 'createdById' })
     createdBy!: User;
-
     @Column()
     createdById!: string;
 
     @CreateDateColumn()
     createdAt!: Date;
-
     @UpdateDateColumn()
     updatedAt!: Date;
 }

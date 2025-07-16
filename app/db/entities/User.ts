@@ -1,5 +1,5 @@
-import { Entity, OneToMany,PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany } from "typeorm";
-import { Product } from "./products";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
+
 export enum UserRole {
     ADMIN = "admin",
     STAFF = "staff",
@@ -24,10 +24,6 @@ export class User {
 
     @Column({ type: "enum", enum: UserRole, default: UserRole.STAFF })
     role!: UserRole;
-
-    @OneToMany(() => Product, product => product.createdBy)
-products!: Product[];
-
 
     @Column({ default: false })
     isVerified!: boolean;

@@ -6,6 +6,7 @@ import {
   ManyToOne,
   OneToMany,
   UpdateDateColumn,
+  JoinColumn,
 } from "typeorm";
 import { User } from "./User";
 import { Product } from "./products";
@@ -16,19 +17,22 @@ export class Supplier {
   id!: string;
 
   @Column()
-name!: string;
+  name!: string;
 
   @Column({ nullable: true })
-email!: string;
+  email?: string;
 
   @Column({ nullable: true })
-phone!: string;
+  phone?: string;
 
   @Column({ type: "text", nullable: true })
-  address!: string;
+  address?: string;
 
-  @ManyToOne(() => User, (user) => user.id)
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'createdById' })
   createdBy!: User;
+  @Column()
+  createdById!: string;
 
   @OneToMany(() => Product, (product) => product.supplier)
   products!: Product[];
@@ -36,5 +40,5 @@ phone!: string;
   @CreateDateColumn()
   createdAt!: Date;
   @UpdateDateColumn()
-        updatedAt!: Date;
+  updatedAt!: Date;
 }

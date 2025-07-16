@@ -83,7 +83,7 @@ export function WarehouseProvider({ children }: { children: ReactNode }) {
             });
 
             const result = await response.json();
-
+console.log("ware" , result.data)
             if (result.success) {
                 setWarehouses(result.data);
             } else {
@@ -159,7 +159,7 @@ export function WarehouseProvider({ children }: { children: ReactNode }) {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch('/api/warehouse/create', {
+            const response = await fetch('/api/warehouse', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

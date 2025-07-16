@@ -1,3 +1,4 @@
+// src/entities/wareHouse.ts
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from "typeorm";
 import { User } from "./User";
 
@@ -30,16 +31,15 @@ export class WareHouse {
     @Column({ nullable: true })
     contactEmail?: string;
 
-    @ManyToOne(() => User, { onDelete: 'CASCADE' })
+    @ManyToOne(() => User, { onDelete: 'SET NULL' })
     @JoinColumn({ name: 'createdById' })
     createdBy!: User;
 
-    @Column()
+    @Column({ nullable: true })
     createdById!: string;
 
     @CreateDateColumn()
     createdAt!: Date;
-    
     @UpdateDateColumn()
     updatedAt!: Date;
 }

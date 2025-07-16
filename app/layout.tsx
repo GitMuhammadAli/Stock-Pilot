@@ -26,12 +26,13 @@ export const metadata = {
   description: "Optimize your inventory, reduce costs, and prevent stockouts with StockPilot",
 }
 
+// Initialize database connection when the app starts
+connectDB().catch(console.error);
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  await connectDB();
 
   return (
     <html lang="en">

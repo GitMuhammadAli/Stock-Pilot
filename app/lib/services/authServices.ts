@@ -131,7 +131,6 @@ console.log(user)
         email: user.email,
         role: user.role,
         name: user.name,
-        isVerified: true
       });
 
       return {
