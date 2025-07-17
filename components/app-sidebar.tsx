@@ -89,9 +89,9 @@ export function AppSidebar() {
           {isOpen && <p className="text-xs text-muted mb-1">MAIN</p>}
           <NavItem href="/dashboard" label="Dashboard" icon={LayoutDashboard} />
           <NavItem href="/warehouse" label="Warehouses" icon={Warehouse} />
+          <NavItem href="/supplier" label="Supplier" icon={User} />
           <NavItem href="/products" label="Products" icon={Package} />
           <NavItem href="/inventory" label="Inventory" icon={Layers} />
-          <NavItem href="/supplier" label="Supplier" icon={User} />
         </div>
 
         <div>

@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authMiddleware } from "./authMiddleware";
 
-type ApiHandler = (req: NextRequest, res: NextResponse<unknown>, user: any) => Promise<NextResponse> | NextResponse;
+
+type Params = {
+  [key: string]: string | string[];
+};
+
+type ApiHandler = (req: NextRequest,res:NextResponse , context: { params: Params }, user: any) => Promise<NextResponse> | NextResponse;
 
 export const withAuth = (handler: ApiHandler): ApiHandler => {
-  return async (req: NextRequest, res: NextResponse) => {
+
+  return async (req: NextRequest, res:NextResponse, context?: { params: Params }) => {
     const authResponse = await authMiddleware(req);
     
     if (authResponse instanceof NextResponse) {
@@ -18,6 +24,7 @@ export const withAuth = (handler: ApiHandler): ApiHandler => {
     }
 
 
-    return handler(req, res, user); 
+
+    return handler(req, res, context ?? { params: {} }, user);
   };
 };

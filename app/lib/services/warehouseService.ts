@@ -171,10 +171,14 @@ export class WarehouseService {
         };
       }
 
+      console.log("before" , warehouse)
+
+
       // Apply partial updates to the found warehouse entity
       Object.assign(warehouse, data);
       // Save the updated warehouse
-      await this.warehouseRepo.save(warehouse);
+      let s = await this.warehouseRepo.save(warehouse);
+      console.log("Saved" , s)
 
       return {
         success: true,
