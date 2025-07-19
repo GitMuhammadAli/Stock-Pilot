@@ -152,6 +152,7 @@ export default function DashboardLayout({
                 className="md:hidden mb-4"
                 onClick={toggleSidebar}
               />
+              <Toaster />
               
               {/* Content with minimal transition */}
               <main 
@@ -164,7 +165,6 @@ export default function DashboardLayout({
                 {children}
               </main>
               
-              <Toaster />
             </div>
           </div>
         </div>
