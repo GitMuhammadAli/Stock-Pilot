@@ -4,7 +4,8 @@ import { motion } from "framer-motion"
 import { ArrowRight, BarChart2, Clock, Shield, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { FC } from "react"
-import DashboardPreview from "@/components/DashboardPreview"
+import BeamsBackground from "@/components/LandingBg"
+ import DashboardPreview from "@/components/DashboardPreview"
 
 interface FeatureCardProps {
   icon: FC<{ className?: string }>;
@@ -65,25 +66,39 @@ const TestimonialCard: FC<TestimonialCardProps> = ({ initial, name, role, quote,
 export default function Page() {
   return (
     <div className="min-h-screen bg-[#0B0F1A] text-white overflow-x-hidden">
-      {/* Hero Section */}
-      <div className="relative min-h-screen flex items-center">
-        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
 
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20 relative z-10">
+
+{/* <BeamsBackground intensity="strong"> */}
+  <div className="flex items-center min-h-screen">
+   {/* Hero Section */}
+     {/* <div className="relative min-h-screen flex items-center"> */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-10 z-0"></div>
+        <div
+          className="absolute inset-0 z-10 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(120deg, rgba(182,244,0,0.18) 0%, rgba(44,52,68,0.22) 40%, rgba(11,15,26,0.96) 100%)",
+            // Brand green (#B6F400), blue accent (#2C3444), deep navy (#0B0F1A)
+          }}
+        ></div>
+
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20 relative z-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="flex flex-col items-center text-center"
           >
-
             <div className="flex flex-col sm:flex-row justify-center items-center mb-8 mt-0 px-4 w-full gap-4 sm:gap-6 md:gap-8">
               <div className="w-full max-w-[300px] sm:max-w-[400px] md:max-w-[500px] transition-all duration-300 hover:scale-105">
-              <a href="https://www.fontspace.com/category/ai"><img src="https://see.fontimg.com/api/rf5/YqOoa/OTE1ZjI2ZmM4ZmUyNDlhOGI5Yjc0OGZmOWQwNzgyYWEudHRm/U3RvY2s/warriot-tech-italic.png?r=fs&h=86&w=1500&fg=B6F400&bg=FFFFFF&tb=1&s=57" alt="Ai fonts" /></a>
+                <a href="https://www.fontspace.com/category/ai">
+                  <img src="https://see.fontimg.com/api/rf5/YqOoa/OTE1ZjI2ZmM4ZmUyNDlhOGI5Yjc0OGZmOWQwNzgyYWEudHRm/U3RvY2s/warriot-tech-italic.png?r=fs&h=86&w=1500&fg=B6F400&bg=FFFFFF&tb=1&s=57" alt="Ai fonts" />
+                </a>
               </div>
               <div className="w-full max-w-[300px] sm:max-w-[400px] md:max-w-[500px] transition-all duration-300 hover:scale-105">
-              <a href="https://www.fontspace.com/category/ai"><img src="https://see.fontimg.com/api/rf5/YqOoa/OTE1ZjI2ZmM4ZmUyNDlhOGI5Yjc0OGZmOWQwNzgyYWEudHRm/UGlsb3Q/warriot-tech-italic.png?r=fs&h=86&w=1500&fg=B6F400&bg=FFFFFF&tb=1&s=57" alt="Ai fonts" /></a>
-                
+                <a href="https://www.fontspace.com/category/ai">
+                  <img src="https://see.fontimg.com/api/rf5/YqOoa/OTE1ZjI2ZmM4ZmUyNDlhOGI5Yjc0OGZmOWQwNzgyYWEudHRm/UGlsb3Q/warriot-tech-italic.png?r=fs&h=86&w=1500&fg=B6F400&bg=FFFFFF&tb=1&s=57" alt="Ai fonts" />
+                </a>
               </div>
             </div>
 
@@ -145,7 +160,7 @@ export default function Page() {
           </motion.div>
         </div>
 
-        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2">
+        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-30">
           <motion.div
             initial={{ y: 0 }}
             animate={{ y: [0, 10, 0] }}
@@ -162,7 +177,9 @@ export default function Page() {
             </svg>
           </motion.div>
         </div>
-      </div>
+      </div> 
+  {/* </div> */}
+{/* </BeamsBackground> */}
 
       {/* Features Section */}
       <div className="py-20 bg-[#0B0F1A]">
