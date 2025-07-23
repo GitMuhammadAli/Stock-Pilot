@@ -4,6 +4,7 @@ import { AppDataSource } from "@/db/data-source";
 import { sendVerificationLink } from "../utils/VerificationLink";
 import { signJwt } from '@/lib/utils/jwt';
 import crypto from 'crypto';
+import { connectDB } from "@/db/connectDb";
 
 interface RegisterResponse {
   success: boolean;
@@ -72,10 +73,37 @@ export class AuthService {
     }
   }
 
+  /**
+   * Checks if a user exists by email or id.
+   * @param identifier - email or id of the user
+   * @returns The user object if found, otherwise null.
+   */
+  async userExists(identifier: { email?: string; id?: string }): Promise<User | null> {
+    try {
+      if (!AppDataSource.isInitialized) {
+        await connectDB(); // Use the centralized initialization
+      }
+
+      let query = this.userRepo.createQueryBuilder("user");
+      
+      if (identifier.email) {
+        query = query.where("user.email = :email", { email: identifier.email });
+      } else if (identifier.id) {
+        query = query.where("user.id = :id", { id: identifier.id });
+      }
+
+      const user = await query.getOne();
+      console.log("Queried User:", user);
+      return user;
+    } catch (error) {
+      console.error("userExists error:", error);
+      throw error; // Rethrow to handle in middleware
+    }
+  }
   async login({ email }: LoginData): Promise<LoginResponse> {
     try {
       let user = await this.userRepo.findOne({ where: { email } });
-console.log(user)
+      console.log("i am login " , user)
       if (user == null) {
         return {
           success: false,

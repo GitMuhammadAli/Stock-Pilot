@@ -55,16 +55,15 @@ export class Supplier {
 
   // The arrow function `() => Product` correctly lazy-loads it.
   // The TypeORM decorator doesn't need the explicit top-level import to work.
-  @OneToMany(() => Product, (product) => product.supplier)
-  products!: Product[];
+ @OneToMany(() => Product, product => product.supplier)
+  products!: Product[]; // Use interface to avoid direct import
 
   @CreateDateColumn()
   createdAt!: Date;
   @UpdateDateColumn()
   updatedAt!: Date;
 }
-
-// ✅ You might still need to import `Product` here if you use it for type checking
-// outside of the TypeORM decorators within this file (e.g., in methods).
-// But for the decorators themselves, the function reference is enough.
-// import { Product } from "./products"; // <-- Uncomment if your linter complains about `Product` type
+export interface IProduct {
+  id: number;
+  supplier: Supplier;
+}

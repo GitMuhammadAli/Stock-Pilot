@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
   await connectDB();
   const authService = new AuthService();
   const response = await authService.verify({ token });
+  console.log("respoooo" , response)
 
   if (!response.success) {
     return NextResponse.redirect(

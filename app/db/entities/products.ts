@@ -40,9 +40,10 @@ export class Product {
   @Column()
   warehouseId!: string;
 
-  @ManyToOne(() => Supplier)
-  @JoinColumn({ name: 'supplierId' })
+
+   @ManyToOne(() => Supplier, supplier => supplier.products)
   supplier!: Supplier;
+
   @Column()
   supplierId!: string;
 
