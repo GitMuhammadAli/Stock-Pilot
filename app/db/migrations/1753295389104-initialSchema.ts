@@ -1,13 +1,14 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitialSchema1752675973713 implements MigrationInterface {
-    name = 'InitialSchema1752675973713'
+export class InitialSchema1753295389104 implements MigrationInterface {
+    name = 'InitialSchema1753295389104'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TYPE "public"."user_role_enum" AS ENUM('admin', 'staff')`);
         await queryRunner.query(`CREATE TABLE "user" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "email" character varying NOT NULL, "verificationToken" character varying, "verificationTokenExpiresAt" TIMESTAMP WITH TIME ZONE, "role" "public"."user_role_enum" NOT NULL DEFAULT 'staff', "isVerified" boolean NOT NULL DEFAULT false, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_e12875dfb3b1d92d7d7c5377e22" UNIQUE ("email"), CONSTRAINT "PK_cace4a159ff9f2512dd42373760" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "ware_house" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "location" character varying NOT NULL, "description" character varying, "isActive" boolean NOT NULL DEFAULT true, "capacity" integer NOT NULL, "currentOccupancy" integer NOT NULL DEFAULT '0', "contactPhone" character varying, "contactEmail" character varying, "createdById" uuid, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_2cd58c197b5c9f327b43a38b838" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "supplier" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "email" character varying, "phone" character varying, "address" text, "createdById" uuid NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_2bc0d2cab6276144d2ff98a2828" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TYPE "public"."supplier_status_enum" AS ENUM('Active', 'Inactive')`);
+        await queryRunner.query(`CREATE TABLE "supplier" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "email" character varying, "phone" character varying, "address" text, "contactPerson" character varying, "website" character varying, "notes" text, "status" "public"."supplier_status_enum" NOT NULL DEFAULT 'Active', "createdById" uuid NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_2bc0d2cab6276144d2ff98a2828" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "product" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" character varying, "sku" character varying NOT NULL, "quantity" integer NOT NULL, "category" character varying, "price" numeric(10,2) NOT NULL, "warehouseId" uuid NOT NULL, "supplierId" uuid NOT NULL, "createdById" uuid NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_34f6ca1cd897cc926bdcca1ca39" UNIQUE ("sku"), CONSTRAINT "PK_bebc9158e480b949565b4dc7a82" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TYPE "public"."order_status_enum" AS ENUM('pending', 'shipped', 'delivered', 'cancelled')`);
         await queryRunner.query(`CREATE TABLE "order" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "orderNumber" character varying NOT NULL, "status" "public"."order_status_enum" NOT NULL DEFAULT 'pending', "supplierId" uuid NOT NULL, "warehouseId" uuid NOT NULL, "createdById" uuid NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_1031171c13130102495201e3e20" PRIMARY KEY ("id"))`);
@@ -40,6 +41,7 @@ export class InitialSchema1752675973713 implements MigrationInterface {
         await queryRunner.query(`DROP TYPE "public"."order_status_enum"`);
         await queryRunner.query(`DROP TABLE "product"`);
         await queryRunner.query(`DROP TABLE "supplier"`);
+        await queryRunner.query(`DROP TYPE "public"."supplier_status_enum"`);
         await queryRunner.query(`DROP TABLE "ware_house"`);
         await queryRunner.query(`DROP TABLE "user"`);
         await queryRunner.query(`DROP TYPE "public"."user_role_enum"`);

@@ -8,15 +8,10 @@ interface Params {
   id: string; // Order ID
 }
 
-async function handler(
-   req: NextRequest,
-  res:NextResponse,
-  context: { params: { [key: string]: string | string[] } },
-  user: any
-) {
+async function handler(req: NextRequest, _context: any, user: any) {
   try {
     await connectDB();
-    const orderId =context.params.id as string;
+    const orderId =_context.params.id as string;
 
     if (!orderId) {
       return NextResponse.json(

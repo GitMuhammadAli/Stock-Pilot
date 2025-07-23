@@ -23,6 +23,7 @@ export async function authMiddleware(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 });
     }
 
+
     const secret = process.env.JWT_SECRET || "mysecret";
     const decoded = jwt.verify(token, secret) as DecodedToken;
     if (!decoded) {

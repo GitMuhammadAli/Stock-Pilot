@@ -92,6 +92,7 @@ export function AppSidebar() {
           <NavItem href="/suppliers" label="Supplier" icon={User} />
           <NavItem href="/products" label="Products" icon={Package} />
           <NavItem href="/inventory" label="Inventory" icon={Layers} />
+          <NavItem href="/orders" label="Orders" icon={Package} />
         </div>
 
         <div>

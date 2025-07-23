@@ -4,15 +4,10 @@ import { orderItemService } from "@/lib/services/orderItemServices";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/db/connectDb";
 
-async function handler(
-  req: NextRequest,
-  res: NextResponse,
-  context: { params: { [key: string]: string | string[] } },
-  user: any
-) {
+async function handler(req: NextRequest, _context: any, user: any) {
   try {
     await connectDB();
-    const targetOrderId = context.params.orderId as string;
+    const targetOrderId = _context.params.orderId as string;
 
     if (!targetOrderId) {
       return NextResponse.json(

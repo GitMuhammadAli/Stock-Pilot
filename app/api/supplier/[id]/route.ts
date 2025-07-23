@@ -4,7 +4,7 @@ import { supplierService } from "@/lib/services/supplierServices";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/db/connectDb";
 
-async function handler(req: NextRequest, user: any) {
+async function handler(req: NextRequest, _context: any, user: any) {
   try {
     await connectDB();
     const supplierId = req.nextUrl.pathname.split("/").pop();

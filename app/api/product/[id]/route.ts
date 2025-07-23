@@ -3,7 +3,7 @@ import { ProductService } from "@/lib/services/productsServices";
 import { connectDB } from "@/db/connectDb";
 import { NextRequest, NextResponse } from "next/server";
 
-async function handler(req: NextRequest, res: NextResponse, user: any) {
+async function handler(req: NextRequest, _context: any, user: any) {
   try {
     await connectDB();
     const productService = new ProductService();

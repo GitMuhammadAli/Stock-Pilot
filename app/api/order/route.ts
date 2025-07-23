@@ -3,8 +3,7 @@ import { withAuth } from "@/lib/middleware/withAuth";
 import { orderService } from "@/lib/services/orderServices"; // Import the singleton instance
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/db/connectDb"; // Import connectDB
-
-async function handler(req: NextRequest, res: NextResponse, user: any) {
+async function handler(req: NextRequest, _context: any, user: any) {
   try {
     await connectDB();
     const userId = user.userId;

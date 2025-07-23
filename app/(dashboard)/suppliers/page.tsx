@@ -1,6 +1,7 @@
+// app/suppliers/page.tsx
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -33,104 +34,45 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
+import { useSupplier } from "@/providers/supplierProvider" // Import the useSupplier hook
+import { Supplier } from "../../types/index" // Import the Supplier type
 
 export default function SuppliersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const { toast } = useToast()
+  const {
+    suppliers,
+    loading,
+    error,
+    getAllSuppliers,
+    deleteSupplier,
+    selectSupplier, // To set the selected supplier when navigating
+  } = useSupplier()
 
-  const suppliers = [
-    {
-      id: 1,
-      name: "TechCorp Solutions",
-      email: "contact@techcorp.com",
-      phone: "+1 (555) 123-4567",
-      address: "123 Tech Street, Silicon Valley, CA 94025",
-      status: "Active",
-      productsCount: 45,
-      ordersCount: 128,
-      totalValue: 245000,
-      lastOrder: "2023-12-14",
-      createdAt: "2023-01-15",
-      rating: 4.8,
-    },
-    {
-      id: 2,
-      name: "FurniMax Industries",
-      email: "sales@furnimax.com",
-      phone: "+1 (555) 987-6543",
-      address: "456 Furniture Ave, Grand Rapids, MI 49503",
-      status: "Active",
-      productsCount: 23,
-      ordersCount: 67,
-      totalValue: 189000,
-      lastOrder: "2023-12-12",
-      createdAt: "2023-02-20",
-      rating: 4.5,
-    },
-    {
-      id: 3,
-      name: "AccessoryPlus Ltd",
-      email: "info@accessoryplus.com",
-      phone: "+1 (555) 456-7890",
-      address: "789 Accessory Blvd, Austin, TX 73301",
-      status: "Active",
-      productsCount: 67,
-      ordersCount: 203,
-      totalValue: 156000,
-      lastOrder: "2023-12-15",
-      createdAt: "2023-03-10",
-      rating: 4.6,
-    },
-    {
-      id: 4,
-      name: "LightWorks Co",
-      email: "orders@lightworks.com",
-      phone: "+1 (555) 321-0987",
-      address: "321 Lighting Way, Portland, OR 97201",
-      status: "Inactive",
-      productsCount: 12,
-      ordersCount: 34,
-      totalValue: 78000,
-      lastOrder: "2023-11-28",
-      createdAt: "2023-04-05",
-      rating: 4.2,
-    },
-    {
-      id: 5,
-      name: "Global Electronics",
-      email: "support@globalelectronics.com",
-      phone: "+1 (555) 654-3210",
-      address: "654 Electronics Plaza, Seattle, WA 98101",
-      status: "Active",
-      productsCount: 89,
-      ordersCount: 312,
-      totalValue: 567000,
-      lastOrder: "2023-12-16",
-      createdAt: "2023-01-08",
-      rating: 4.9,
-    },
-  ]
+  // Fetch suppliers on component mount
+  useEffect(() => {
+    getAllSuppliers()
+  }, [getAllSuppliers])
 
   const filteredSuppliers = suppliers.filter(
     (supplier) =>
       supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.address.toLowerCase().includes(searchTerm.toLowerCase()),
+      supplier.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      supplier.address?.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const handleDeleteSupplier = (supplierId: number, supplierName: string) => {
-    // Simulate deletion with potential foreign key constraint
-    const supplier = suppliers.find((s) => s.id === supplierId)
-    if (supplier && supplier.productsCount > 0) {
-      toast({
-        title: "Cannot delete supplier",
-        description: `Cannot delete '${supplierName}'. It is currently linked to ${supplier.productsCount} products and ${supplier.ordersCount} orders.`,
-        variant: "destructive",
-      })
-    } else {
+  const handleDeleteSupplier = async (supplierId: string, supplierName: string) => {
+    const success = await deleteSupplier(supplierId)
+    if (success) {
       toast({
         title: "Supplier deleted",
         description: `'${supplierName}' has been successfully deleted.`,
+      })
+    } else {
+      toast({
+        title: "Error deleting supplier",
+        description: error || `Failed to delete '${supplierName}'. It might be linked to products or orders or an unexpected error occurred.`,
+        variant: "destructive",
       })
     }
   }
@@ -139,17 +81,17 @@ export default function SuppliersPage() {
     return status === "Active" ? "bg-green-500" : "bg-gray-500"
   }
 
-  const getRatingColor = (rating: number) => {
+  const getRatingColor = (rating: number | undefined) => {
+    if (rating === undefined) return "text-gray-400"; // No rating
     if (rating >= 4.5) return "text-green-500"
     if (rating >= 4.0) return "text-yellow-500"
     return "text-red-500"
   }
 
-  // Calculate summary statistics
   const totalSuppliers = suppliers.length
   const activeSuppliers = suppliers.filter((s) => s.status === "Active").length
-  const totalProducts = suppliers.reduce((sum, s) => sum + s.productsCount, 0)
-  const totalValue = suppliers.reduce((sum, s) => sum + s.totalValue, 0)
+  const totalProducts = suppliers.reduce((sum, s) => sum + (s.productsCount || 0), 0) // Use 0 if undefined
+  const totalValue = suppliers.reduce((sum, s) => sum + (s.totalValue || 0), 0) // Use 0 if undefined
 
   return (
     <div className="space-y-6">
@@ -239,96 +181,114 @@ export default function SuppliersPage() {
           <CardTitle className="text-[#B6F400]">Suppliers ({filteredSuppliers.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="border-[#2C3444]">
-                <TableHead className="text-gray-300">Supplier</TableHead>
-                <TableHead className="text-gray-300">Contact</TableHead>
-                <TableHead className="text-gray-300">Products</TableHead>
-                <TableHead className="text-gray-300">Orders</TableHead>
-                <TableHead className="text-gray-300">Total Value</TableHead>
-                <TableHead className="text-gray-300">Rating</TableHead>
-                <TableHead className="text-gray-300">Status</TableHead>
-                <TableHead className="text-gray-300">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSuppliers.map((supplier) => (
-                <TableRow key={supplier.id} className="border-[#2C3444]">
-                  <TableCell>
-                    <div>
-                      <div className="font-medium text-white">{supplier.name}</div>
-                      <div className="text-sm text-gray-400 flex items-center mt-1">
-                        <MapPin className="h-3 w-3 mr-1" />
-                        {supplier.address.split(",")[1]?.trim() || "N/A"}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="text-sm text-gray-300 flex items-center">
-                        <Mail className="h-3 w-3 mr-2" />
-                        {supplier.email}
-                      </div>
-                      <div className="text-sm text-gray-300 flex items-center">
-                        <Phone className="h-3 w-3 mr-2" />
-                        {supplier.phone}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-gray-300">{supplier.productsCount}</TableCell>
-                  <TableCell className="text-gray-300">{supplier.ordersCount}</TableCell>
-                  <TableCell className="text-gray-300">${supplier.totalValue.toLocaleString()}</TableCell>
-                  <TableCell className={`font-medium ${getRatingColor(supplier.rating)}`}>
-                    ⭐ {supplier.rating}
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={`${getStatusColor(supplier.status)} text-white`}>{supplier.status}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Link href={`/suppliers/${supplier.id}`}>
-                        <Button variant="ghost" size="sm" className="text-[#B6F400] hover:bg-[#2C3444]">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Link href={`/suppliers/${supplier.id}/edit`}>
-                        <Button variant="ghost" size="sm" className="text-blue-400 hover:bg-[#2C3444]">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-red-400 hover:bg-[#2C3444]">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-[#1C2333] border-[#2C3444]">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="text-white">Delete Supplier</AlertDialogTitle>
-                            <AlertDialogDescription className="text-gray-300">
-                              Are you sure you want to delete '{supplier.name}'? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel className="bg-[#2C3444] text-white border-[#2C3444] hover:bg-[#3C4454]">
-                              Cancel
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteSupplier(supplier.id, supplier.name)}
-                              className="bg-red-500 hover:bg-red-600"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
+          {loading ? (
+            <p className="text-gray-400">Loading suppliers...</p>
+          ) : error ? (
+            <p className="text-red-500">Error loading suppliers: {error}</p>
+          ) : filteredSuppliers.length === 0 ? (
+            <p className="text-gray-400">No suppliers found matching your criteria.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="border-[#2C3444]">
+                  <TableHead className="text-gray-300">Supplier</TableHead>
+                  <TableHead className="text-gray-300">Contact</TableHead>
+                  <TableHead className="text-gray-300">Products</TableHead>
+                  <TableHead className="text-gray-300">Orders</TableHead>
+                  <TableHead className="text-gray-300">Total Value</TableHead>
+                  <TableHead className="text-gray-300">Rating</TableHead>
+                  <TableHead className="text-gray-300">Status</TableHead>
+                  <TableHead className="text-gray-300">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredSuppliers.map((supplier) => (
+                  <TableRow key={supplier.id} className="border-[#2C3444]">
+                    <TableCell>
+                      <div>
+                        <div className="font-medium text-white">{supplier.name}</div>
+                        <div className="text-sm text-gray-400 flex items-center mt-1">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {supplier.address?.split(",")[1]?.trim() || "N/A"}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="text-sm text-gray-300 flex items-center">
+                          <Mail className="h-3 w-3 mr-2" />
+                          {supplier.email || 'N/A'}
+                        </div>
+                        <div className="text-sm text-gray-300 flex items-center">
+                          <Phone className="h-3 w-3 mr-2" />
+                          {supplier.phone || 'N/A'}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-gray-300">{supplier.productsCount}</TableCell>
+                    <TableCell className="text-gray-300">{supplier.ordersCount}</TableCell>
+                    <TableCell className="text-gray-300">${supplier.totalValue.toLocaleString()}</TableCell>
+                    <TableCell className={`font-medium ${getRatingColor(supplier.rating)}`}>
+                      {supplier.rating !== undefined ? `⭐ ${supplier.rating}` : 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={`${getStatusColor(supplier.status)} text-white`}>{supplier.status}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Link href={`/suppliers/${supplier.id}`}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-[#B6F400] hover:bg-[#2C3444]"
+                            onClick={() => selectSupplier(supplier)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Link href={`/suppliers/${supplier.id}/edit`}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-blue-400 hover:bg-[#2C3444]"
+                            onClick={() => selectSupplier(supplier)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="text-red-400 hover:bg-[#2C3444]">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="bg-[#1C2333] border-[#2C3444]">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-white">Delete Supplier</AlertDialogTitle>
+                              <AlertDialogDescription className="text-gray-300">
+                                Are you sure you want to delete '{supplier.name}'? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="bg-[#2C3444] text-white border-[#2C3444] hover:bg-[#3C4454]">
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteSupplier(supplier.id, supplier.name)}
+                                className="bg-red-500 hover:bg-red-600"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

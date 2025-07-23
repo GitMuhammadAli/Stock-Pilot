@@ -3,63 +3,17 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter, usePathname } from "next/navigation";
 
-interface User {
-    userId: string;
-    email: string;
-    role: string;
-    name: string;
-    isVerified: boolean;
-}
 
-interface Warehouse {
-    id: string
-    name: string
-    location: string
-    description?: string
-    isActive: boolean
-    capacity: number
-    currentOccupancy: number
-    contactPhone?: string
-    contactEmail?: string
-    createdById: string
-    createdBy: User
-    createdAt: Date
-    updatedAt: Date
-}
 
-interface CreateWarehouseData {
-    name: string;
-    location: string;
-    description?: string;
-    capacity: number;
-    contactPhone?: string;
-    contactEmail?: string;
-}
+import {
+   
+    User,
+    Warehouse,
+    CreateWarehouseData, // Ensure this is imported if you're using it in Product type
+    UpdateWarehouseData, // Ensure this is imported for embedded Supplier in Product type
+    WarehouseContextType // Ensure this is imported for embedded Warehouse in Product type
+} from '../types/index'; // Adjust the import path as per your project structure
 
-interface UpdateWarehouseData {
-    name?: string;
-    location?: string;
-    description?: string;
-    isActive?: boolean;
-    capacity?: number;
-    currentOccupancy?: number;
-    contactPhone?: string;
-    contactEmail?: string;
-}
-
-interface WarehouseContextType {
-    warehouses: Warehouse[];
-    loading: boolean;
-    error: string | null;
-    selectedWarehouse: Warehouse | null;
-    createWarehouse: (data: CreateWarehouseData) => Promise<boolean>;
-    updateWarehouse: (id: string, data: UpdateWarehouseData) => Promise<boolean>;
-    deleteWarehouse: (id: string) => Promise<boolean>;
-    getWarehouse: (id: string) => Promise<Warehouse | null>;
-    getAllWarehouses: () => Promise<void>;
-    getAllWarehousesForUser: () => Promise<void>;
-    selectWarehouse: (warehouse: Warehouse) => void;
-}
 
 const WarehouseContext = createContext<WarehouseContextType | undefined>(undefined);
 

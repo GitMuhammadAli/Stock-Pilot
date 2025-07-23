@@ -1,8 +1,8 @@
+// app/suppliers/new/page.tsx
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState } from "react" // Removed useEffect as no initial data fetching for new
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,12 +12,22 @@ import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft, Save, X } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
+import { useSupplier } from "@/providers/supplierProvider" // Import useSupplier
+import { CreateSupplierData } from "@/types/index" // Only import CreateSupplierData
 
-export default function NewSupplierPage() {
+// No SupplierFormProps needed as it's purely for new creation
+export default function SupplierForm() {
   const router = useRouter()
   const { toast } = useToast()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [formData, setFormData] = useState({
+  const {
+    createSupplier,
+    loading: contextLoading, // Loading state from the context for data fetching/mutations
+    error: contextError, // Error state from the context
+    selectSupplier // To clear selected supplier when leaving (good practice, even if not strictly necessary here)
+  } = useSupplier()
+
+  // Initial state for a new supplier
+  const [formData, setFormData] = useState<CreateSupplierData>({
     name: "",
     email: "",
     phone: "",
@@ -25,22 +35,28 @@ export default function NewSupplierPage() {
     contactPerson: "",
     website: "",
     notes: "",
+    // Status is often 'Active' by default for new creations and not sent in CreateSupplierData
+    // If your backend expects a default status, it should apply it.
+    // If you explicitly want to send it, ensure CreateSupplierData includes 'status'.
   })
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const [errors, setErrors] = useState<Record<string, string>>({})
-
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof CreateSupplierData, value: string) => { // Type field for CreateSupplierData keys
     setFormData((prev) => ({ ...prev, [field]: value }))
     // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }))
+    if (formErrors[field]) {
+      setFormErrors((prev) => ({ ...prev, [field]: "" }))
     }
   }
+
+  // No handleStatusChange needed as new suppliers typically default to 'Active'
+  // and the form won't offer a status selection for creation.
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.name.trim()) {
+    if (!formData.name?.trim()) {
       newErrors.name = "Supplier name is required"
     }
 
@@ -48,11 +64,11 @@ export default function NewSupplierPage() {
       newErrors.email = "Please enter a valid email address"
     }
 
-    if (formData.phone && !/^[+]?[1-9][\d]{0,15}$/.test(formData.phone.replace(/[\s\-$$$$]/g, ""))) {
-      newErrors.phone = "Please enter a valid phone number"
+    if (formData.phone && !/^[\d\s\-\(\)\+]{7,20}$/.test(formData.phone.replace(/[\s\-\(\)]/g, ""))) {
+      newErrors.phone = "Please enter a valid phone number (7-20 digits, +, -, spaces allowed)"
     }
 
-    setErrors(newErrors)
+    setFormErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
@@ -60,36 +76,42 @@ export default function NewSupplierPage() {
     e.preventDefault()
 
     if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please correct the highlighted fields.",
+        variant: "destructive",
+      });
       return
     }
 
     setIsSubmitting(true)
-
+    let success = false
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Simulate potential errors
-      if (formData.name.toLowerCase().includes("existing")) {
-        throw new Error("Supplier name already exists")
+      // Create new supplier
+      success = await createSupplier(formData) // formData is already CreateSupplierData
+      
+      if (success) {
+        toast({
+          title: `Supplier created!`,
+          description: `${formData.name} has been successfully added.`,
+        })
+        router.push("/suppliers") // Redirect to suppliers list
+      } else {
+        // Error message already set by context if it failed for API reason
+        toast({
+          title: `Error creating supplier`,
+          description: contextError || "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        })
       }
-
-      toast({
-        title: "Supplier created!",
-        description: `${formData.name} has been successfully added to your suppliers.`,
-      })
-
-      router.push("/suppliers")
-    } catch (error) {
-      toast({
-        title: "Error creating supplier",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive",
-      })
     } finally {
       setIsSubmitting(false)
     }
   }
+
+  // Title and button text are fixed for creation
+  const title = "Add New Supplier";
+  const buttonText = isSubmitting ? "Creating..." : "Create Supplier";
 
   return (
     <div className="space-y-6">
@@ -100,7 +122,7 @@ export default function NewSupplierPage() {
             Back to Suppliers
           </Button>
         </Link>
-        <h1 className="text-3xl font-semibold text-white">Add New Supplier</h1>
+        <h1 className="text-3xl font-semibold text-white">{title}</h1>
       </div>
 
       <div className="max-w-2xl">
@@ -122,7 +144,7 @@ export default function NewSupplierPage() {
                     className="bg-[#2C3444] border-none text-white"
                     placeholder="Enter supplier name"
                   />
-                  {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+                  {formErrors.name && <p className="text-red-500 text-sm">{formErrors.name}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -131,7 +153,7 @@ export default function NewSupplierPage() {
                   </Label>
                   <Input
                     id="contactPerson"
-                    value={formData.contactPerson}
+                    value={formData.contactPerson || ""}
                     onChange={(e) => handleInputChange("contactPerson", e.target.value)}
                     className="bg-[#2C3444] border-none text-white"
                     placeholder="Enter contact person name"
@@ -147,12 +169,12 @@ export default function NewSupplierPage() {
                   <Input
                     id="email"
                     type="email"
-                    value={formData.email}
+                    value={formData.email || ""}
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     className="bg-[#2C3444] border-none text-white"
                     placeholder="Enter email address"
                   />
-                  {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+                  {formErrors.email && <p className="text-red-500 text-sm">{formErrors.email}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -161,12 +183,12 @@ export default function NewSupplierPage() {
                   </Label>
                   <Input
                     id="phone"
-                    value={formData.phone}
+                    value={formData.phone || ""}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
                     className="bg-[#2C3444] border-none text-white"
                     placeholder="Enter phone number"
                   />
-                  {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
+                  {formErrors.phone && <p className="text-red-500 text-sm">{formErrors.phone}</p>}
                 </div>
               </div>
 
@@ -176,7 +198,7 @@ export default function NewSupplierPage() {
                 </Label>
                 <Input
                   id="website"
-                  value={formData.website}
+                  value={formData.website || ""}
                   onChange={(e) => handleInputChange("website", e.target.value)}
                   className="bg-[#2C3444] border-none text-white"
                   placeholder="Enter website URL"
@@ -189,12 +211,15 @@ export default function NewSupplierPage() {
                 </Label>
                 <Textarea
                   id="address"
-                  value={formData.address}
+                  value={formData.address || ""}
                   onChange={(e) => handleInputChange("address", e.target.value)}
                   className="bg-[#2C3444] border-none text-white min-h-[100px]"
                   placeholder="Enter full address"
                 />
               </div>
+
+              {/* Status selection removed for new supplier creation, as it typically defaults on backend */}
+              {/* If your backend requires explicit status for new, uncomment and add it to CreateSupplierData */}
 
               <div className="space-y-2">
                 <Label htmlFor="notes" className="text-gray-300">
@@ -202,7 +227,7 @@ export default function NewSupplierPage() {
                 </Label>
                 <Textarea
                   id="notes"
-                  value={formData.notes}
+                  value={formData.notes || ""}
                   onChange={(e) => handleInputChange("notes", e.target.value)}
                   className="bg-[#2C3444] border-none text-white min-h-[80px]"
                   placeholder="Additional notes about the supplier"
@@ -212,17 +237,18 @@ export default function NewSupplierPage() {
               <div className="flex space-x-4 pt-4">
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || contextLoading}
                   className="bg-[#B6F400] text-[#0B0F1A] hover:bg-[#9ED900]"
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  {isSubmitting ? "Creating..." : "Create Supplier"}
+                  {buttonText}
                 </Button>
                 <Link href="/suppliers">
                   <Button
                     type="button"
                     variant="outline"
                     className="border-[#2C3444] text-white hover:bg-[#2C3444] bg-transparent"
+                    onClick={() => selectSupplier(null)} // Still good to clear selected on navigation
                   >
                     <X className="mr-2 h-4 w-4" />
                     Cancel

@@ -4,7 +4,7 @@ import { orderItemService } from "@/lib/services/orderItemServices"; // Import t
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/db/connectDb"; // Import connectDB
 
-async function handler(req: NextRequest, res: NextResponse, user: any) {
+async function handler(req: NextRequest, _context: any, user: any) {
   try {
     await connectDB();
     // No specific user ID check needed here as order items are linked to orders/products,

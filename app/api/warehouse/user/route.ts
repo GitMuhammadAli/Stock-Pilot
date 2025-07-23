@@ -5,7 +5,7 @@ import { connectDB } from "@/db/connectDb";
 
 
 
-async function handler(req: NextRequest, res: NextResponse, user: any) {
+async function handler(req: NextRequest, _context: any, user: any) {
     try {
         await connectDB();
         const warehouseService = new WarehouseService()

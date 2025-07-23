@@ -3,13 +3,15 @@ import { WarehouseService } from "@/lib/services/warehouseService";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/db/connectDb";
 
-async function handler(req: NextRequest, res: NextResponse, user: any) {
+async function handler(req: NextRequest, _context: any, user: any) {
   try {
     
   
     await connectDB();
     const wareHouseService = new WarehouseService();
     const userId = user.userId; 
+    console.log(user)
+    console.log(userId)
 
     if (!userId) {
         return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });

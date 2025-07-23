@@ -1,30 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authMiddleware } from "./authMiddleware";
 
-
 type Params = {
   [key: string]: string | string[];
 };
 
-type ApiHandler = (req: NextRequest,res:NextResponse , context: { params: Params }, user: any) => Promise<NextResponse> | NextResponse;
+// Handler does NOT receive a res parameter; it returns a NextResponse
+type ApiHandler = (
+  req: NextRequest,
+  context: { params: Params },
+  user: any
+) => Promise<NextResponse> | NextResponse;
 
 export const withAuth = (handler: ApiHandler): ApiHandler => {
-
-  return async (req: NextRequest, res:NextResponse, context?: { params: Params }) => {
+  return async (req: NextRequest, context: { params: Params } = { params: {} }) => {
     const authResponse = await authMiddleware(req);
-    
+
     if (authResponse instanceof NextResponse) {
-      return authResponse; 
+      return authResponse;
     }
 
-    const { user } = authResponse; 
+    const { user } = authResponse;
 
     if (!user) {
-      return NextResponse.json({ success: false, message: "Authentication failed" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, message: "Authentication failed" },
+        { status: 401 }
+      );
     }
 
-
-
-    return handler(req, res, context ?? { params: {} }, user);
+    return handler(req, context, user);
   };
 };
