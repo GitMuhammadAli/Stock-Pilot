@@ -10,13 +10,14 @@ interface User {
   role: string;
   name: string;
   isVerified: boolean;
+  token?:string;
 }
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (userData: User) => void;
+  login: (token: string) => Promise<void>;
   logout: () => void;
   refreshAuth: () => Promise<void>;
 }
@@ -89,11 +90,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   }, [checkAuth]);
 
-  const login = useCallback((userData: User) => {
-    setUser(userData);
-    setIsAuthenticated(true);
+  // const login = useCallback((userData: User) => {
+  //   setUser(userData);
+  //   setIsAuthenticated(true);
+  //   setIsLoading(false);
+  // }, []);
+
+
+  const login = useCallback(async (token: string) => {
+  try {
+    const response = await fetch('/api/auth/user', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    console.log(response)
+
+    if (response.ok) {
+      const userData = await response.json();
+      if (userData.authenticated && userData.user) {
+        setUser(userData.user);
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    } else {
+      setUser(null);
+      setIsAuthenticated(false);
+    }
+  } catch (error) {
+    console.error('Auth check failed:', error);
+    setUser(null);
+    setIsAuthenticated(false);
+  } finally {
     setIsLoading(false);
-  }, []);
+  }
+}, []);
 
   const logout = useCallback(async () => {
     try {

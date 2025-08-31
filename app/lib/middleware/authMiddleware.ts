@@ -15,7 +15,9 @@ interface DecodedToken {
 }
 
 export async function authMiddleware(req: NextRequest) {
+
   try {
+  await connectDB();
     const token =
       req.cookies.get("authToken")?.value ||
       (req.headers.get("authorization")?.startsWith("Bearer ")
@@ -35,8 +37,9 @@ export async function authMiddleware(req: NextRequest) {
 
     const secret = process.env.JWT_SECRET || "mysecret";
     const decoded = jwt.verify(token, secret) as DecodedToken;
-    if (!decoded) {
-      console.log("i am inside decoded")
+    console.log("decoded token", decoded);
+      if (!decoded) {
+      console.log("Invalid decoded token or missing id");
       // Delete cookie and redirect to home page if token is invalid
       const response = NextResponse.redirect(new URL("/", req.url));
       // response.cookies.set("authToken", "", { path: "/", maxAge: 0 });

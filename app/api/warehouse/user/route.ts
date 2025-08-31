@@ -9,7 +9,7 @@ async function handler(req: NextRequest, _context: any, user: any) {
     try {
         await connectDB();
         const warehouseService = new WarehouseService()
-        const userId = user.userId;
+        const userId = user.id;
         console.log("userId", userId)
         const response = await warehouseService.getWarehousesByUser(userId)
 

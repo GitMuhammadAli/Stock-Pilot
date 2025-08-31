@@ -5,17 +5,20 @@ import { connectDB } from "@/db/connectDb";
 
 async function handler(req: NextRequest, _context: any, user: any) {
   try {
+   console.log('yompom:', req);
     
   
     await connectDB();
     const wareHouseService = new WarehouseService();
-    const userId = user.userId; 
+    const userId = user.id; 
     console.log(user)
     console.log(userId)
+
 
     if (!userId) {
         return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
+
 
     if(req.method === "POST"){
         const body = await req.json();

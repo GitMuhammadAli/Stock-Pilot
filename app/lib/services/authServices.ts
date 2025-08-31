@@ -81,7 +81,7 @@ export class AuthService {
   async userExists(identifier: { email?: string; id?: string }): Promise<User | null> {
     try {
       if (!AppDataSource.isInitialized) {
-        await connectDB(); // Use the centralized initialization
+        await connectDB();
       }
 
       let query = this.userRepo.createQueryBuilder("user");

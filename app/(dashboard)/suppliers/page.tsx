@@ -227,7 +227,7 @@ export default function SuppliersPage() {
                     </TableCell>
                     <TableCell className="text-gray-300">{supplier.productsCount}</TableCell>
                     <TableCell className="text-gray-300">{supplier.ordersCount}</TableCell>
-                    <TableCell className="text-gray-300">${supplier.totalValue.toLocaleString()}</TableCell>
+                    <TableCell className="text-gray-300">${supplier.totalValue}</TableCell>
                     <TableCell className={`font-medium ${getRatingColor(supplier.rating)}`}>
                       {supplier.rating !== undefined ? `⭐ ${supplier.rating}` : 'N/A'}
                     </TableCell>

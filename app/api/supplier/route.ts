@@ -7,7 +7,7 @@ async function handler(req: NextRequest, _context: any, user: any) {
   try {
     await connectDB();
 
-    const userId = user.userId;
+    const userId = user.id;
 
     if (!userId) {
       return NextResponse.json(

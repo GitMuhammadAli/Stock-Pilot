@@ -8,7 +8,7 @@ async function handler(req: NextRequest, _context: any, user: any) {
   try {
     await connectDB();
     const wareHouseService = new WarehouseService();
-    const userId = user.userId;
+    const userId = user.id;
     const wareHouseId = req.nextUrl.pathname.split('/').pop();
 
     if (!userId)

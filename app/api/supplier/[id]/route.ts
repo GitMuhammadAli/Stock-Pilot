@@ -8,7 +8,7 @@ async function handler(req: NextRequest, _context: any, user: any) {
   try {
     await connectDB();
     const supplierId = req.nextUrl.pathname.split("/").pop();
-    const userId = user.userId;
+    const userId = user.id;
     if (!supplierId) {
       return NextResponse.json(
         { success: false, message: "Supplier ID is required." },
