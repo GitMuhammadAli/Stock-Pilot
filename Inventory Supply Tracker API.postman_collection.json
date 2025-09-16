@@ -1,0 +1,997 @@
+{
+	"info": {
+		"_postman_id": "3214fb0a-37b4-4f6f-bdec-8f73fb6c361c",
+		"name": "Inventory Supply Tracker API",
+		"description": "Complete API testing collection for Inventory Supply Tracker",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30057058"
+	},
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.user && responseJson.user.id) {",
+									"        pm.collectionVariables.set('user_id', responseJson.user.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{inventory}}/api/auth/register",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.token) {",
+									"        pm.collectionVariables.set('auth_token', responseJson.token);",
+									"    }",
+									"    if (responseJson.user && responseJson.user.id) {",
+									"        pm.collectionVariables.set('user_id', responseJson.user.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{inventory}}/api/auth/login",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Email",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventory}}/api/auth/verify?token=3a025646c5eecd9f43312163b8fd6596a3170c2ff5adb624f3e76e479388fbf6",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"verify"
+							],
+							"query": [
+								{
+									"key": "token",
+									"value": "3a025646c5eecd9f43312163b8fd6596a3170c2ff5adb624f3e76e479388fbf6"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏭 Suppliers",
+			"item": [
+				{
+					"name": "Create Supplier",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.id) {",
+									"        pm.collectionVariables.set('supplier_id', responseJson.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"ABC Suppliers Ltd\",\n  \"contactEmail\": \"contact@abcsuppliers.com\",\n  \"contactPhone\": \"+1234567890\",\n  \"address\": \"123 Business Street, City, Country\",\n  \"website\": \"https://abcsuppliers.com\",\n  \"taxId\": \"TAX123456\",\n  \"paymentTerms\": \"Net 30\",\n  \"notes\": \"Reliable supplier for electronics\"\n}"
+						},
+						"url": {
+							"raw": "{{inventory}}/api/supplier",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"supplier"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Suppliers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventory}}/api/supplier",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"supplier"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Supplier by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventory}}/api/supplier/{{supplier_id}}",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"supplier",
+								"{{supplier_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Supplier",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"ABC Suppliers Ltd - Updated\",\n  \"contactEmail\": \"newcontact@abcsuppliers.com\",\n  \"contactPhone\": \"+1234567891\",\n  \"address\": \"456 New Business Street, City, Country\",\n  \"notes\": \"Updated supplier information\"\n}"
+						},
+						"url": {
+							"raw": "{{inventory}}/api/supplier/{{supplier_id}}",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"supplier",
+								"{{supplier_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Supplier",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{inventory}}/api/supplier/{{supplier_id}}",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"supplier",
+								"{{supplier_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏢 Warehouses",
+			"item": [
+				{
+					"name": "Create Warehouse",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.id) {",
+									"        pm.collectionVariables.set('warehouse_id', responseJson.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Main Warehouse\",\n  \"location\": \"123 Warehouse District, Industrial Area\",\n  \"capacity\": 10000,\n  \"managerId\": \"{{user_id}}\",\n  \"contactPhone\": \"+1234567890\",\n  \"contactEmail\": \"warehouse@company.com\"\n}"
+						},
+						"url": {
+							"raw": "{{inventory}}/api/warehouse",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"warehouse"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Warehouses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventory}}/api/warehouse",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"warehouse"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Warehouse by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventory}}/api/warehouse/{{warehouse_id}}",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"warehouse",
+								"{{warehouse_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Warehouse",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Main Warehouse - Updated\",\n  \"location\": \"456 New Warehouse District\",\n  \"capacity\": 15000,\n  \"contactPhone\": \"+1234567891\"\n}"
+						},
+						"url": {
+							"raw": "{{inventory}}/api/warehouse/{{warehouse_id}}",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"warehouse",
+								"{{warehouse_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Warehouse",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{inventory}}/api/warehouse/{{warehouse_id}}",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"warehouse",
+								"{{warehouse_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Warehouses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventory}}/api/warehouse/user",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"warehouse",
+								"user"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📦 Products",
+			"item": [
+				{
+					"name": "Create Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.id) {",
+									"        pm.collectionVariables.set('product_id', responseJson.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Laptop Computer\",\n  \"description\": \"High-performance laptop for business use\",\n  \"sku\": \"LAP-001\",\n  \"barcode\": \"1234567890123\",\n  \"price\": 999.99,\n  \"cost\": 750.00,\n  \"category\": \"Electronics\",\n  \"brand\": \"TechCorp\",\n  \"model\": \"TC-2024\",\n  \"weight\": 2.5,\n  \"dimensions\": \"35x25x2 cm\",\n  \"minimumStock\": 10,\n  \"maximumStock\": 100,\n  \"supplierId\": \"{{supplier_id}}\",\n  \"warehouseId\": \"{{warehouse_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{inventory}}/api/product",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"product"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventory}}/api/product",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"product"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventory}}/api/product/{{product_id}}",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"product",
+								"{{product_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Product",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Laptop Computer - Updated\",\n  \"description\": \"Updated high-performance laptop\",\n  \"price\": 1099.99,\n  \"cost\": 800.00,\n  \"minimumStock\": 15,\n  \"maximumStock\": 150\n}"
+						},
+						"url": {
+							"raw": "{{inventory}}/api/product/{{product_id}}",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"product",
+								"{{product_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Product",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{inventory}}/api/product/{{product_id}}",
+							"host": [
+								"{{inventory}}"
+							],
+							"path": [
+								"api",
+								"product",
+								"{{product_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📋 Orders",
+			"item": [
+				{
+					"name": "Create Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.id) {",
+									"        pm.collectionVariables.set('order_id', responseJson.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderNumber\": \"ORD-2024-001\",\n  \"type\": \"purchase\",\n  \"status\": \"pending\",\n  \"totalAmount\": 1999.98,\n  \"notes\": \"Urgent order for Q4 inventory\",\n  \"shippingAddress\": \"123 Delivery Street, City, Country\",\n  \"expectedDeliveryDate\": \"2024-09-15\",\n  \"createdById\": \"{{user_id}}\",\n  \"supplierId\": \"{{supplier_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/order",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Orders",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/order",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/order/{{order_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order",
+								"{{order_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Order",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"confirmed\",\n  \"totalAmount\": 2199.98,\n  \"notes\": \"Order confirmed and updated\",\n  \"expectedDeliveryDate\": \"2024-09-20\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/order/{{order_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order",
+								"{{order_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Order Status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"shipped\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/order/{{order_id}}/status",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order",
+								"{{order_id}}",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Orders by User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/order/user/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order",
+								"user",
+								"{{user_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Orders by Warehouse",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/order/warehouse/{{warehouse_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order",
+								"warehouse",
+								"{{warehouse_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Orders by Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/order/status/pending",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order",
+								"status",
+								"pending"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Order",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/order/{{order_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order",
+								"{{order_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📋 Order Items",
+			"item": [
+				{
+					"name": "Create Order Item",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"productId\": \"{{product_id}}\",\n  \"quantity\": 2,\n  \"unitPrice\": 999.99,\n  \"notes\": \"Bulk order discount applied\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/order-item",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order-item"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Order Items",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/order-item",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order-item"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order Item by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/order-item/item_id_here",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order-item",
+								"item_id_here"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order Items by Order",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/order-item/order/{{order_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order-item",
+								"order",
+								"{{order_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order Items by Product",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/order-item/product/{{product_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order-item",
+								"product",
+								"{{product_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order Total",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/order-item/order/{{order_id}}/total",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order-item",
+								"order",
+								"{{order_id}}",
+								"total"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Order Item",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": 3,\n  \"unitPrice\": 899.99,\n  \"notes\": \"Quantity updated after review\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/order-item/item_id_here",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order-item",
+								"item_id_here"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Order Item",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/order-item/item_id_here",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"order-item",
+								"item_id_here"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{auth_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "product_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "supplier_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "warehouse_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
