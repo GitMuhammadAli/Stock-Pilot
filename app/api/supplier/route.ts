@@ -1,12 +1,14 @@
+// app/api/supplier/route.ts
 import { withAuth } from "@/lib/middleware/withAuth";
-import { supplierService } from "@/lib/services/supplierServices"; 
+import { supplierService } from "@/lib/services/supplierServices";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/db/connectDb";
 
-async function handler(req: NextRequest, _context: any, user: any) {
+// Unified handler for POST and GET requests to /api/supplier
+async function supplierHandler(req: NextRequest, _context: any, user: any) {
   try {
     await connectDB();
-
+    const { method } = req;
     const userId = user.id;
 
     if (!userId) {
@@ -16,7 +18,7 @@ async function handler(req: NextRequest, _context: any, user: any) {
       );
     }
 
-    if (req.method === "POST") {
+    if (method === "POST") {
       const body = await req.json();
       console.log("Create Supplier Request Body:", body);
 
@@ -34,10 +36,10 @@ async function handler(req: NextRequest, _context: any, user: any) {
           { status: statusCode }
         );
       }
-    }
-    else if (req.method === "GET") {
-      console.log("Fetching All Suppliers.");
-      const response = await supplierService.getAllSuppliers();
+    } else if (method === "GET") {
+      console.log("Fetching Suppliers for User.");
+      // Use getSuppliersByUser to filter results by the authenticated user
+      const response = await supplierService.getSuppliersByUser(userId);
 
       if (response.success) {
         return NextResponse.json({ success: true, data: response.data }, { status: 200 });
@@ -47,8 +49,7 @@ async function handler(req: NextRequest, _context: any, user: any) {
           { status: 500 }
         );
       }
-    }
-    else {
+    } else {
       return NextResponse.json(
         { success: false, message: "Method Not Allowed" },
         { status: 405 }
@@ -67,6 +68,5 @@ async function handler(req: NextRequest, _context: any, user: any) {
   }
 }
 
-// Export the handlers wrapped with authentication middleware
-export const POST = withAuth(handler);
-export const GET = withAuth(handler);
+export const POST = withAuth(supplierHandler);
+export const GET = withAuth(supplierHandler);

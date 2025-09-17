@@ -1,4 +1,5 @@
-import { WareHouse } from "@/db/entities/wareHouse";
+// src/lib/services/warehouseServices.ts
+import { WareHouse, WarehouseStatus } from "@/db/entities/wareHouse";
 import { AppDataSource } from "@/db/data-source";
 import { Repository } from "typeorm";
 import { User } from "@/db/entities/User";
@@ -7,10 +8,10 @@ import { User } from "@/db/entities/User";
 interface CreateWarehouseData {
   name: string;
   location: string;
-  description?: string; // Optional as per entity definition
+  description?: string;
   capacity: number;
-  contactPhone?: string; // Optional
-  contactEmail?: string; // Optional
+  contactPhone?: string;
+  contactEmail?: string;
   createdById: string; // Foreign key for the creating user
 }
 
@@ -20,18 +21,22 @@ interface UpdateWarehouseData {
   location?: string;
   description?: string;
   isActive?: boolean;
+  status?: WarehouseStatus; // Use the enum for type safety
   capacity?: number;
   currentOccupancy?: number;
   contactPhone?: string;
   contactEmail?: string;
+  latitude?: number;
+  longitude?: number;
+  operatingHours?: object; // Use object or a more specific type if needed
 }
 
 // Standardized response interface for service methods
 interface WarehouseResponse {
   success: boolean;
   message: string;
-  data?: WareHouse | WareHouse[] | null; // Added null for cases where data might not be found
-  error?: any; // Keeping 'any' for general error catching as requested
+  data?: WareHouse | WareHouse[] | null;
+  error?: any;
 }
 
 export class WarehouseService {
@@ -39,12 +44,8 @@ export class WarehouseService {
   private userRepo: Repository<User>;
 
   constructor() {
-    // Ensure AppDataSource is initialized before getting repositories
-    // In a Next.js app, AppDataSource.initialize() should be called once at app startup (e.g., in layout.tsx or a global setup file).
-    // If not initialized, getRepository will throw an error.
     if (!AppDataSource.isInitialized) {
       console.warn("AppDataSource is not initialized. Ensure connectDB() is called before using WarehouseService.");
-      // In a real application, you might want to throw an error here or handle this more robustly.
     }
     this.warehouseRepo = AppDataSource.getRepository(WareHouse);
     this.userRepo = AppDataSource.getRepository(User);
@@ -57,7 +58,6 @@ export class WarehouseService {
    */
   async createWarehouse(data: CreateWarehouseData): Promise<WarehouseResponse> {
     try {
-      // Find the user who is creating the warehouse
       const user = await this.userRepo.findOne({ where: { id: data.createdById } });
       if (!user) {
         return {
@@ -66,13 +66,11 @@ export class WarehouseService {
         };
       }
 
-      // Create a new warehouse instance
       const warehouse = this.warehouseRepo.create({
         ...data,
-        createdBy: user, // Assign the found User entity to the relation
+        createdBy: user,
       });
 
-      // Save the new warehouse to the database
       await this.warehouseRepo.save(warehouse);
 
       return {
@@ -96,9 +94,9 @@ export class WarehouseService {
    */
   async getAllWarehouses(): Promise<WarehouseResponse> {
     try {
-      // Find all warehouses and eager load the 'createdBy' user relation
       const warehouses = await this.warehouseRepo.find({
         relations: ['createdBy'],
+        order: { createdAt: "DESC" },
       });
 
       return {
@@ -124,7 +122,6 @@ export class WarehouseService {
   async getWarehouseById(id: string): Promise<WarehouseResponse> {
     try {
       console.log(`Attempting to retrieve warehouse with ID: ${id}`);
-      // Find one warehouse by ID and eager load the 'createdBy' user relation
       const warehouse = await this.warehouseRepo.findOne({
         where: { id },
         relations: ['createdBy'],
@@ -134,7 +131,7 @@ export class WarehouseService {
         return {
           success: false,
           message: `Warehouse with ID ${id} not found.`,
-          data: null, // Explicitly set data to null when not found
+          data: null,
         };
       }
 
@@ -161,7 +158,6 @@ export class WarehouseService {
    */
   async updateWarehouse(id: string, data: UpdateWarehouseData): Promise<WarehouseResponse> {
     try {
-      // Find the warehouse to update
       const warehouse = await this.warehouseRepo.findOne({ where: { id } });
 
       if (!warehouse) {
@@ -171,14 +167,11 @@ export class WarehouseService {
         };
       }
 
-      console.log("before" , warehouse)
-
-
-      // Apply partial updates to the found warehouse entity
+      console.log("before", warehouse);
       Object.assign(warehouse, data);
-      // Save the updated warehouse
+
       let s = await this.warehouseRepo.save(warehouse);
-      console.log("Saved" , s)
+      console.log("Saved", s);
 
       return {
         success: true,
@@ -202,7 +195,6 @@ export class WarehouseService {
    */
   async deleteWarehouse(id: string): Promise<WarehouseResponse> {
     try {
-      // Find the warehouse to delete
       const warehouse = await this.warehouseRepo.findOne({ where: { id } });
 
       if (!warehouse) {
@@ -212,7 +204,6 @@ export class WarehouseService {
         };
       }
 
-      // Remove the warehouse from the database
       await this.warehouseRepo.remove(warehouse);
 
       return {
@@ -236,10 +227,10 @@ export class WarehouseService {
    */
   async getWarehousesByUser(userId: string): Promise<WarehouseResponse> {
     try {
-      // Find warehouses where createdById matches the provided userId
       const warehouses = await this.warehouseRepo.find({
         where: { createdById: userId },
-        relations: ['createdBy'], // Eager load the user details if needed
+        relations: ['createdBy'],
+        order: { createdAt: "DESC" },
       });
 
       return {
@@ -252,6 +243,112 @@ export class WarehouseService {
       return {
         success: false,
         message: "An error occurred while retrieving user warehouses.",
+        error: error,
+      };
+    }
+  }
+
+  /**
+   * Retrieves a single warehouse by its ID, ensuring it belongs to the user.
+   * @param id - The ID of the warehouse to retrieve.
+   * @param userId - The ID of the authenticated user.
+   * @returns A WarehouseResponse containing the found warehouse data, or a not found/unauthorized message.
+   */
+  async getWarehouseByIdAndUser(id: string, userId: string): Promise<WarehouseResponse> {
+    try {
+      console.log(`Attempting to retrieve warehouse with ID: ${id}`);
+      const warehouse = await this.warehouseRepo.findOne({
+        where: { id, createdById: userId },
+        relations: ['createdBy'],
+      });
+
+      if (!warehouse) {
+        return {
+          success: false,
+          message: `Warehouse with ID ${id} not found or you are not authorized to view it.`,
+          data: null,
+        };
+      }
+
+      return {
+        success: true,
+        message: "Warehouse retrieved successfully.",
+        data: warehouse,
+      };
+    } catch (error) {
+      console.error(`Error retrieving warehouse with ID ${id}:`, error);
+      return {
+        success: false,
+        message: "An error occurred while retrieving the warehouse.",
+        error: error,
+      };
+    }
+  }
+
+  /**
+   * Updates an existing warehouse by its ID, ensuring it belongs to the user.
+   * @param id - The ID of the warehouse to update.
+   * @param userId - The ID of the authenticated user.
+   * @param data - The partial data to update the warehouse with.
+   * @returns A WarehouseResponse indicating success or failure, with the updated warehouse data.
+   */
+  async updateWarehouseAndUser(id: string, userId: string, data: UpdateWarehouseData): Promise<WarehouseResponse> {
+    try {
+      const warehouse = await this.warehouseRepo.findOne({ where: { id, createdById: userId } });
+
+      if (!warehouse) {
+        return {
+          success: false,
+          message: `Warehouse with ID ${id} not found or you are not authorized to update it.`,
+        };
+      }
+
+      Object.assign(warehouse, data);
+      await this.warehouseRepo.save(warehouse);
+
+      return {
+        success: true,
+        message: "Warehouse updated successfully.",
+        data: warehouse,
+      };
+    } catch (error) {
+      console.error(`Error updating warehouse with ID ${id}:`, error);
+      return {
+        success: false,
+        message: "An error occurred while updating the warehouse.",
+        error: error,
+      };
+    }
+  }
+
+  /**
+   * Deletes a warehouse by its ID, ensuring it belongs to the user.
+   * @param id - The ID of the warehouse to delete.
+   * @param userId - The ID of the authenticated user.
+   * @returns A WarehouseResponse indicating success or failure.
+   */
+  async deleteWarehouseAndUser(id: string, userId: string): Promise<WarehouseResponse> {
+    try {
+      const warehouse = await this.warehouseRepo.findOne({ where: { id, createdById: userId } });
+
+      if (!warehouse) {
+        return {
+          success: false,
+          message: `Warehouse with ID ${id} not found or you are not authorized to delete it.`,
+        };
+      }
+
+      await this.warehouseRepo.remove(warehouse);
+
+      return {
+        success: true,
+        message: "Warehouse deleted successfully.",
+      };
+    } catch (error) {
+      console.error(`Error deleting warehouse with ID ${id}:`, error);
+      return {
+        success: false,
+        message: "An error occurred while deleting the warehouse.",
         error: error,
       };
     }

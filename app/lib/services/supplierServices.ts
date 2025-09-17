@@ -1,32 +1,61 @@
-// src/lib/services/SupplierService.ts
+// src/lib/services/supplierServices.ts
 import { Supplier } from "@/db/entities/supplier";
 import { AppDataSource } from "@/db/data-source";
 import { Repository } from "typeorm";
 import { User } from "@/db/entities/User";
+import { SupplierStatus, SupplierTier } from "@/db/entities/supplier";
 
 // Interface for creating a new supplier
-interface CreateSupplierData {
+export interface CreateSupplierData {
   name: string;
   email?: string;
   phone?: string;
   address?: string;
-  createdById: string; // Foreign key for the creating user
+  contactPerson?: string;
+  website?: string;
+  notes?: string;
+  status?: SupplierStatus;
+  tier?: SupplierTier;
+  creditLimit?: number;
+    currentBalance?: number;
+  rating?: number;
+  totalOrders?: number;
+  totalOrderValue?: number;
+  paymentTerms?: number | string;
+  taxId?: string;
+  contractStartDate?: Date;
+  contractEndDate?: Date;
+  createdById: string;
 }
 
-// Interface for updating an existing supplier
+// Interface for updating an existing supplier (expanded to include all fields)
 interface UpdateSupplierData {
   name?: string;
   email?: string;
   phone?: string;
   address?: string;
+  contactPerson?: string;
+  website?: string;
+  notes?: string;
+  status?: SupplierStatus;
+  tier?: SupplierTier;
+  creditLimit?: number;
+  currentBalance?: number;
+  rating?: number;
+  totalOrders?: number;
+  totalOrderValue?: number;
+  paymentTerms?: number | string;
+  taxId?: string;
+  contractStartDate?: Date;
+  contractEndDate?: Date;
 }
 
 // Standardized response interface for service methods
 interface SupplierResponse {
   success: boolean;
   message: string;
-  data?: Supplier | Supplier[] | null; // Added null for cases where data might not be found
-  error?: any; // Keeping 'any' for general error catching as requested
+  data?: Supplier | Supplier[] | null;
+  error?: any;
 }
 
 export class SupplierService {
@@ -34,12 +63,8 @@ export class SupplierService {
   private userRepo: Repository<User>;
 
   constructor() {
-    // Ensure AppDataSource is initialized before getting repositories
-    // In a Next.js app, AppDataSource.initialize() should be called once at app startup (e.g., in layout.tsx or a global setup file).
-    // If not initialized, getRepository will throw an error.
     if (!AppDataSource.isInitialized) {
       console.warn("AppDataSource is not initialized. Ensure connectDB() is called before using SupplierService.");
-      // In a real application, you might want to throw an error here or handle this more robustly.
     }
     this.supplierRepo = AppDataSource.getRepository(Supplier);
     this.userRepo = AppDataSource.getRepository(User);
@@ -52,7 +77,6 @@ export class SupplierService {
    */
   async createSupplier(data: CreateSupplierData): Promise<SupplierResponse> {
     try {
-      // Find the user who is creating the supplier
       const user = await this.userRepo.findOne({ where: { id: data.createdById } });
       if (!user) {
         return {
@@ -61,13 +85,24 @@ export class SupplierService {
         };
       }
 
-      // Create a new supplier instance
+      // Pre-process the incoming data to ensure it matches the database schema.
+      let paymentTermsAsNumber = 30;
+      if (data.paymentTerms) {
+        const numericMatch = String(data.paymentTerms).match(/\d+/);
+        if (numericMatch && numericMatch[0]) {
+          const parsedValue = parseInt(numericMatch[0], 10);
+          if (!isNaN(parsedValue)) {
+            paymentTermsAsNumber = parsedValue;
+          }
+        }
+      }
+
       const supplier = this.supplierRepo.create({
         ...data,
-        createdBy: user, // Assign the found User entity to the relation
+        paymentTerms: paymentTermsAsNumber,
+        createdBy: user,
       });
 
-      // Save the new supplier to the database
       await this.supplierRepo.save(supplier);
 
       return {
@@ -86,51 +121,51 @@ export class SupplierService {
   }
 
   /**
-   * Retrieves all suppliers from the database.
-   * @returns A SupplierResponse containing a list of all suppliers.
+   * Retrieves all suppliers for the requesting user.
+   * @param userId - The ID of the user whose suppliers are to be retrieved.
+   * @returns A SupplierResponse containing a list of suppliers created by the user.
    */
-  async getAllSuppliers(): Promise<SupplierResponse> {
+  async getSuppliersByUser(userId: string): Promise<SupplierResponse> {
     try {
-      // Find all suppliers and eager load the 'createdBy' user relation
       const suppliers = await this.supplierRepo.find({
+        where: { createdById: userId },
         relations: ['createdBy'],
-        order: { createdAt: "DESC" }, // Order by creation date descending
+        order: { createdAt: "DESC" },
       });
 
       return {
         success: true,
-        message: "Suppliers retrieved successfully.",
+        message: `Suppliers for user ID ${userId} retrieved successfully.`,
         data: suppliers,
       };
     } catch (error) {
-      console.error("Error retrieving all suppliers:", error);
+      console.error(`Error retrieving suppliers for user ID ${userId}:`, error);
       return {
         success: false,
-        message: "An error occurred while retrieving suppliers.",
+        message: "An error occurred while retrieving user suppliers.",
         error: error,
       };
     }
   }
 
   /**
-   * Retrieves a single supplier by its ID.
+   * Retrieves a single supplier by its ID, ensuring it belongs to the user.
    * @param id - The ID of the supplier to retrieve.
-   * @returns A SupplierResponse containing the found supplier data, or a not found message.
+   * @param userId - The ID of the authenticated user.
+   * @returns A SupplierResponse containing the found supplier data, or a not found/unauthorized message.
    */
-  async getSupplierById(id: string): Promise<SupplierResponse> {
+  async getSupplierByIdAndUser(id: string, userId: string): Promise<SupplierResponse> {
     try {
-      console.log(`Attempting to retrieve supplier with ID: ${id}`);
-      // Find one supplier by ID and eager load the 'createdBy' user relation and 'products'
       const supplier = await this.supplierRepo.findOne({
-        where: { id },
-        relations: ['createdBy', 'products'], // Keep 'products' relation if you want to load them
+        where: { id, createdById: userId },
+        relations: ['createdBy'],
       });
 
       if (!supplier) {
         return {
           success: false,
-          message: `Supplier with ID ${id} not found.`,
-          data: null, // Explicitly set data to null when not found
+          message: `Supplier with ID ${id} not found or you are not authorized to view it.`,
+          data: null,
         };
       }
 
@@ -150,26 +185,38 @@ export class SupplierService {
   }
 
   /**
-   * Updates an existing supplier by its ID.
+   * Updates an existing supplier by its ID, ensuring it belongs to the user.
    * @param id - The ID of the supplier to update.
+   * @param userId - The ID of the authenticated user.
    * @param data - The partial data to update the supplier with.
    * @returns A SupplierResponse indicating success or failure, with the updated supplier data.
    */
-  async updateSupplier(id: string, data: UpdateSupplierData): Promise<SupplierResponse> {
+  async updateSupplierAndUser(id: string, userId: string, data: UpdateSupplierData): Promise<SupplierResponse> {
     try {
-      // Find the supplier to update
-      const supplier = await this.supplierRepo.findOne({ where: { id } });
+      const supplier = await this.supplierRepo.findOne({ where: { id, createdById: userId } });
 
       if (!supplier) {
         return {
           success: false,
-          message: `Supplier with ID ${id} not found.`,
+          message: `Supplier with ID ${id} not found or you are not authorized to update it.`,
         };
       }
 
-      // Apply partial updates to the found supplier entity
+      // Pre-process paymentTerms if it exists in the data
+      if (data.paymentTerms) {
+        const numericMatch = String(data.paymentTerms).match(/\d+/);
+        if (numericMatch && numericMatch[0]) {
+          data.paymentTerms = parseInt(numericMatch[0], 10);
+        } else {
+          // If the string is invalid, you might want to return an error or skip the update
+          return {
+            success: false,
+            message: "Invalid format for paymentTerms. Please provide a number or a string like 'Net 30'.",
+          };
+        }
+      }
+
       Object.assign(supplier, data);
-      // Save the updated supplier
       await this.supplierRepo.save(supplier);
 
       return {
@@ -188,22 +235,22 @@ export class SupplierService {
   }
 
   /**
-   * Deletes a supplier by its ID.
+   * Deletes a supplier by its ID, ensuring it belongs to the user.
    * @param id - The ID of the supplier to delete.
+   * @param userId - The ID of the authenticated user.
    * @returns A SupplierResponse indicating success or failure.
    */
-  async deleteSupplier(id: string): Promise<SupplierResponse> {
+  async deleteSupplierAndUser(id: string, userId: string): Promise<SupplierResponse> {
     try {
-      const supplier = await this.supplierRepo.findOne({ where: { id } });
+      const supplier = await this.supplierRepo.findOne({ where: { id, createdById: userId } });
 
       if (!supplier) {
         return {
           success: false,
-          message: `Supplier with ID ${id} not found.`,
+          message: `Supplier with ID ${id} not found or you are not authorized to delete it.`,
         };
       }
 
-      // Remove the supplier from the database
       await this.supplierRepo.remove(supplier);
 
       return {
@@ -220,35 +267,103 @@ export class SupplierService {
     }
   }
 
+  // Deprecated methods that should not be used in production for security reasons
+  // They are kept here for historical context, but should be replaced by their "AndUser" counterparts.
+  
   /**
-   * Retrieves all suppliers created by a specific user.
-   * @param userId - The ID of the user whose suppliers are to be retrieved.
-   * @returns A SupplierResponse containing a list of suppliers created by the user.
+   * @deprecated Use `getSupplierByIdAndUser` for secure, user-specific access.
    */
-  async getSuppliersByUser(userId: string): Promise<SupplierResponse> {
+  async getSupplierById(id: string): Promise<SupplierResponse> {
     try {
-      // Find suppliers where createdBy relation's ID matches the provided userId
-      const suppliers = await this.supplierRepo.find({
-        where: { createdBy: { id: userId } }, // Use nested object for relation filtering
+      const supplier = await this.supplierRepo.findOne({
+        where: { id },
         relations: ['createdBy'],
-        order: { createdAt: "DESC" },
       });
+
+      if (!supplier) {
+        return {
+          success: false,
+          message: `Supplier with ID ${id} not found.`,
+          data: null,
+        };
+      }
 
       return {
         success: true,
-        message: `Suppliers for user ID ${userId} retrieved successfully.`,
-        data: suppliers,
+        message: "Supplier retrieved successfully.",
+        data: supplier,
       };
     } catch (error) {
-      console.error(`Error retrieving suppliers for user ID ${userId}:`, error);
+      console.error(`Error retrieving supplier with ID ${id}:`, error);
       return {
         success: false,
-        message: "An error occurred while retrieving user suppliers.",
+        message: "An error occurred while retrieving the supplier.",
+        error: error,
+      };
+    }
+  }
+
+  /**
+   * @deprecated Use `updateSupplierAndUser` for secure, user-specific updates.
+   */
+  async updateSupplier(id: string, data: UpdateSupplierData): Promise<SupplierResponse> {
+    try {
+      const supplier = await this.supplierRepo.findOne({ where: { id } });
+
+      if (!supplier) {
+        return {
+          success: false,
+          message: `Supplier with ID ${id} not found.`,
+        };
+      }
+      
+      Object.assign(supplier, data);
+      await this.supplierRepo.save(supplier);
+
+      return {
+        success: true,
+        message: "Supplier updated successfully.",
+        data: supplier,
+      };
+    } catch (error) {
+      console.error(`Error updating supplier with ID ${id}:`, error);
+      return {
+        success: false,
+        message: "An error occurred while updating the supplier.",
+        error: error,
+      };
+    }
+  }
+
+  /**
+   * @deprecated Use `deleteSupplierAndUser` for secure, user-specific deletion.
+   */
+  async deleteSupplier(id: string): Promise<SupplierResponse> {
+    try {
+      const supplier = await this.supplierRepo.findOne({ where: { id } });
+
+      if (!supplier) {
+        return {
+          success: false,
+          message: `Supplier with ID ${id} not found.`,
+        };
+      }
+
+      await this.supplierRepo.remove(supplier);
+
+      return {
+        success: true,
+        message: "Supplier deleted successfully.",
+      };
+    } catch (error) {
+      console.error(`Error deleting supplier with ID ${id}:`, error);
+      return {
+        success: false,
+        message: "An error occurred while deleting the supplier.",
         error: error,
       };
     }
   }
 }
 
-// Export a singleton instance of the service
 export const supplierService = new SupplierService();

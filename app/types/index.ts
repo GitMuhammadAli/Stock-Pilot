@@ -38,6 +38,7 @@ export interface CreateWarehouseData {
     capacity: number;
     contactPhone?: string;
     contactEmail?: string;
+    currentOccupancy?: number;
 }
 
 export interface UpdateWarehouseData {

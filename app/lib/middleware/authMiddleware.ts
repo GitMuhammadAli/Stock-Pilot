@@ -7,7 +7,7 @@ import { connectDB } from "@/db/connectDb";
 dotenv.config();
 
 interface DecodedToken {
-  id: string;
+  userId: string;
   email: string;
   role: string;
   name: string;
@@ -15,9 +15,8 @@ interface DecodedToken {
 }
 
 export async function authMiddleware(req: NextRequest) {
-
   try {
-  await connectDB();
+    await connectDB();
     const token =
       req.cookies.get("authToken")?.value ||
       (req.headers.get("authorization")?.startsWith("Bearer ")
@@ -25,50 +24,39 @@ export async function authMiddleware(req: NextRequest) {
         : null);
 
     if (!token) {
-      console.log("i am inside token")
-
-      // Delete cookie and redirect to home page if not authenticated
+      console.log("i am inside token");
       const response = NextResponse.redirect(new URL("/", req.url));
-      // response.cookies.set("authToken", "", { path: "/", maxAge: 0 });
       return response;
     }
 
-    console.log("i am token in auth" ,token)
-
+    console.log("i am token in auth", token);
     const secret = process.env.JWT_SECRET || "mysecret";
     const decoded = jwt.verify(token, secret) as DecodedToken;
     console.log("decoded token", decoded);
-      if (!decoded) {
-      console.log("Invalid decoded token or missing id");
-      // Delete cookie and redirect to home page if token is invalid
+
+    // ✅ Add an explicit check for the userId
+    if (!decoded || !decoded.userId) {
+      console.log("Invalid decoded token or missing userId");
       const response = NextResponse.redirect(new URL("/", req.url));
-      // response.cookies.set("authToken", "", { path: "/", maxAge: 0 });
       return response;
     }
-    console.log("i am token in auth" ,decoded)
+    console.log("i am token in auth", decoded);
 
-
-    // Use AuthService.userExits to check if user exists by id
+    // ✅ Use the correct property: decoded.userId
     const authService = new AuthService();
-    const user = await authService.userExists({ id: decoded.id });
-    console.log("i am inside user after authmiddlware" , user)
+    const user = await authService.userExists({ id: decoded.userId });
+    console.log("i am inside user after authmiddlware", user);
     if (!user) {
-      console.log("i am inside user")
-
-      // Delete cookie and redirect to home page if user does not exist
+      console.log("User not found in the database");
       const response = NextResponse.redirect(new URL("/", req.url));
-      // response.cookies.set("authToken", "", { path: "/", maxAge: 0 });
       return response;
     }
 
     return { user };
   } catch (error) {
-      console.log("i am inside catch")
-
+    console.log("i am inside catch");
     console.error("Authentication error:", error);
-    // Delete cookie and redirect to home page on error
     const response = NextResponse.redirect(new URL("/", req.url));
-    // response.cookies.set("authToken", "", { path: "/", maxAge: 0 });
     return response;
   }
 }

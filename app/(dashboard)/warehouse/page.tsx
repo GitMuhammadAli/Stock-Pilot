@@ -12,7 +12,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 
 
-import { Eye } from "@deemlol/next-icons";
+import { Edit, Eye, Trash2 } from "@deemlol/next-icons";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogTitle, AlertDialogTrigger } from "@radix-ui/react-alert-dialog"
+import { AlertDialogHeader, AlertDialogFooter } from "@/components/ui/alert-dialog"
+import { Badge } from "lucide-react"
 export default function WarehousesPage() {
   const { toast } = useToast();
   const { 
@@ -235,7 +238,7 @@ export default function WarehousesPage() {
       {loading && <p className="text-center py-4">Loading warehouses...</p>}
       {error && <p className="text-red-500 text-center py-4">Error: {error}</p>}
       
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Warehouses</CardTitle>
         </CardHeader>
@@ -293,7 +296,119 @@ export default function WarehousesPage() {
             </TableBody>
           </Table>
         </CardContent>
-      </Card>
+      </Card> */}
+
+{/* Warehouses Table */}
+<Card className="bg-[#1C2333] border-none">
+  <CardHeader>
+    <CardTitle className="text-[#B6F400]">
+      Warehouses ({warehouses.length})
+    </CardTitle>
+  </CardHeader>
+  <CardContent>
+    {loading ? (
+      <p className="text-gray-400">Loading warehouses...</p>
+    ) : error ? (
+      <p className="text-red-500">Error loading warehouses: {error}</p>
+    ) : warehouses.length === 0 ? (
+      <p className="text-gray-400">No warehouses found matching your criteria.</p>
+    ) : (
+      <Table>
+        <TableHeader>
+          <TableRow className="border-[#2C3444]">
+            <TableHead className="text-gray-300">Name</TableHead>
+            <TableHead className="text-gray-300">Location</TableHead>
+            <TableHead className="text-gray-300">Capacity</TableHead>
+            <TableHead className="text-gray-300">Occupancy</TableHead>
+            <TableHead className="text-gray-300">Status</TableHead>
+            <TableHead className="text-gray-300">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {warehouses.map((warehouse) => (
+            <TableRow key={warehouse.id} className="border-[#2C3444]">
+              <TableCell>
+                <div className="font-medium text-white">{warehouse.name}</div>
+              </TableCell>
+              <TableCell className="text-gray-300">{warehouse.location || "N/A"}</TableCell>
+              <TableCell className="text-gray-300">{warehouse.capacity}</TableCell>
+              <TableCell className="text-gray-300">{warehouse.currentOccupancy}</TableCell>
+              <TableCell>
+                {/* <Badge
+                  className={`${
+                    warehouse.status === "active"
+                      ? "bg-green-600"
+                      : "bg-gray-500"
+                  } text-white`}
+                >
+                  {warehouse.status || "inactive"}
+                </Badge> */}
+              </TableCell>
+              <TableCell>
+                <div className="flex space-x-2">
+                  {/* View */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-[#B6F400] hover:bg-[#2C3444]"
+                    onClick={() => openViewDialog(warehouse)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  {/* Edit */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-blue-400 hover:bg-[#2C3444]"
+                    onClick={() => openEditDialog(warehouse)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  {/* Delete */}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-400 hover:bg-[#2C3444]"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="bg-[#1C2333] border-[#2C3444]">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-white">
+                          Delete Warehouse
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-gray-300">
+                          Are you sure you want to delete '{warehouse.name}'? This
+                          action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-[#2C3444] text-white border-[#2C3444] hover:bg-[#3C4454]">
+                          Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteWarehouse(warehouse.id)}
+                          className="bg-red-500 hover:bg-red-600"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    )}
+  </CardContent>
+</Card>
+
+
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
