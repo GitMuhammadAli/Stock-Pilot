@@ -125,7 +125,7 @@ export default function SupplierForm() {
         <h1 className="text-3xl font-semibold text-white">{title}</h1>
       </div>
 
-      <div className="max-w-2xl">
+      <div className="w-full">
         <Card className="bg-[#1C2333] border-none">
           <CardHeader>
             <CardTitle className="text-[#B6F400]">Supplier Information</CardTitle>

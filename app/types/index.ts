@@ -1,3 +1,5 @@
+import { WarehouseStatus } from "@/db/entities/wareHouse";
+
 export interface User {
     userId: string;
     email: string;
@@ -16,6 +18,9 @@ export interface User {
 }
 
 export interface Warehouse {
+    status: any;
+    supplier: string;
+    manager: string;
     id: string
     name: string
     location: string
@@ -32,13 +37,19 @@ export interface Warehouse {
 }
 
 export interface CreateWarehouseData {
-    name: string;
-    location: string;
-    description?: string;
-    capacity: number;
-    contactPhone?: string;
-    contactEmail?: string;
-    currentOccupancy?: number;
+  supplier: string;
+  manager: string;
+  name: string
+  location: string
+  description?: string
+  capacity: number
+  currentOccupancy?: number
+  contactPhone?: string
+  contactEmail?: string
+  isActive?: boolean
+  status?: WarehouseStatus
+  latitude?: number
+  longitude?: number
 }
 
 export interface UpdateWarehouseData {
@@ -53,17 +64,23 @@ export interface UpdateWarehouseData {
 }
 
 export interface WarehouseContextType {
-    warehouses: Warehouse[];
-    loading: boolean;
-    error: string | null;
-    selectedWarehouse: Warehouse | null;
-    createWarehouse: (data: CreateWarehouseData) => Promise<boolean>;
-    updateWarehouse: (id: string, data: UpdateWarehouseData) => Promise<boolean>;
-    deleteWarehouse: (id: string) => Promise<boolean>;
-    getWarehouse: (id: string) => Promise<Warehouse | null>;
-    getAllWarehouses: () => Promise<void>;
-    getAllWarehousesForUser: () => Promise<void>;
-    selectWarehouse: (warehouse: Warehouse) => void;
+  warehouses: Warehouse[];
+  loading: boolean;
+  error: string | null;
+  selectedWarehouse: Warehouse | null;
+
+  // CRUD
+  createWarehouse: (data: CreateWarehouseData) => Promise<boolean>;
+  updateWarehouse: (id: string, data: UpdateWarehouseData) => Promise<boolean>;
+  deleteWarehouse: (id: string) => Promise<boolean>;
+
+  // Fetch
+  getWarehouse: (id: string) => Promise<Warehouse | null>;
+  getAllWarehouses: () => Promise<void>;
+  getAllWarehousesForUser: () => Promise<void>;
+
+  // State helpers
+  selectWarehouse: (warehouse: Warehouse | null) => void;
 }
 
 // src/types/supplier.ts
@@ -293,3 +310,5 @@ export interface OrderItemContextType {
     getOrderItemsTotal: (orderId: string) => Promise<number | null>; // Fetches total for a specific order
     selectOrderItem: (orderItem: OrderItem) => void;
 }
+
+export { WarehouseStatus };
