@@ -29,7 +29,7 @@ export function WarehouseProvider({ children }: { children: ReactNode }) {
   const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(
     null
   );
-  const hasFetched = useRef(false); // ✅ track if we already fetched once
+  const hasFetched = useRef(false);
   const router = useRouter();
 
   // Fetch all warehouses (general function)

@@ -1,10 +1,8 @@
-// app/api/supplier/route.ts
 import { withAuth } from "@/lib/middleware/withAuth";
 import { supplierService } from "@/lib/services/supplierServices";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/db/connectDb";
 
-// Unified handler for POST and GET requests to /api/supplier
 async function supplierHandler(req: NextRequest, _context: any, user: any) {
   try {
     await connectDB();

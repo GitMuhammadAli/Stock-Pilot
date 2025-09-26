@@ -88,6 +88,16 @@ export interface WarehouseContextType {
 export type SupplierStatus = "Active" | "Inactive"; // Assuming this enum is supported by backend
 
 export interface Supplier {
+  creditLimit: ReactNode;
+  totalOrders: number;
+  totalOrderValue: string;
+  tier: string;
+  creditLimit: any;
+  paymentTerms: ReactNode;
+  currentBalance: ReactNode;
+  taxId: ReactNode;
+  contractStartDate: any;
+  contractEndDate: string;
   id: string; // Backend typically uses UUIDs for IDs
   name: string;
   email: string;
