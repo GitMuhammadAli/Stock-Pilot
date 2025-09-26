@@ -1,4 +1,5 @@
 import { WarehouseStatus } from "@/db/entities/wareHouse";
+import { ReactNode } from "react";
 
 export interface User {
     userId: string;
@@ -92,7 +93,6 @@ export interface Supplier {
   totalOrders: number;
   totalOrderValue: string;
   tier: string;
-  creditLimit: any;
   paymentTerms: ReactNode;
   currentBalance: ReactNode;
   taxId: ReactNode;
