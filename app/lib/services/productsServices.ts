@@ -66,10 +66,12 @@ export class ProductService {
    */
   async createProduct(data: CreateProductData): Promise<ProductResponse> {
     try {
+      console.log("data for product ," ,  data)
       // Validate and fetch related entities
       const user = await this.userRepo.findOne({
         where: { id: data.createdById },
       });
+      console.log(user)
       if (!user) {
         return {
           success: false,

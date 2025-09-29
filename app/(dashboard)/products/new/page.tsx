@@ -1,406 +1,245 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Save, X, Loader2 } from "lucide-react"
-import Link from "next/link"
-import { useToast } from "@/hooks/use-toast"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Save, X, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useWarehouse } from "@/providers/wareHouseProvider";
+import { useSupplier } from "@/providers/supplierProvider";
 
 export default function NewProductPage() {
-  const router = useRouter()
-  const { toast } = useToast()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter();
+  const { toast } = useToast();
 
+  const { suppliers, loading: supplierLoading } = useSupplier();
+  const { warehouses, loading: warehouseLoading } = useWarehouse();
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ✅ Add quantity in form state
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     sku: "",
+    barcode: "",
     price: "",
-    quantity: "",
-    minStock: "",
+    cost: "",
     category: "",
+    brand: "",
+    model: "",
+    weight: "",
+    dimensions: "",
+    minimumStock: "10",
+    maximumStock: "100",
     supplierId: "",
     warehouseId: "",
-  })
+    quantity: "0", // <-- NEW
+  });
 
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [suppliers, setSuppliers] = useState<Array<{ id: number; name: string }>>([])
-  const [warehouses, setWarehouses] = useState<Array<{ id: number; name: string }>>([])
-
-  const categories = ["Electronics", "Furniture", "Accessories", "Lighting", "Office Supplies", "Tools"]
-
-  // Simulate loading suppliers and warehouses
-  useEffect(() => {
-    const loadPrerequisiteData = async () => {
-      setIsLoading(true)
-      try {
-        // Simulate parallel API calls
-        await new Promise((resolve) => setTimeout(resolve, 800))
-
-        // Mock data - in real app, these would be API calls
-        setSuppliers([
-          { id: 1, name: "TechCorp Solutions" },
-          { id: 2, name: "FurniMax Industries" },
-          { id: 3, name: "AccessoryPlus Ltd" },
-          { id: 4, name: "LightWorks Co" },
-          { id: 5, name: "Global Electronics" },
-        ])
-
-        setWarehouses([
-          { id: 1, name: "Main Warehouse" },
-          { id: 2, name: "West Coast Hub" },
-          { id: 3, name: "Central Distribution" },
-          { id: 4, name: "Southeast Facility" },
-        ])
-      } catch (error) {
-        toast({
-          title: "Error loading data",
-          description: "Failed to load suppliers and warehouses. Please refresh the page.",
-          variant: "destructive",
-        })
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadPrerequisiteData()
-  }, [toast])
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-    // Clear error when user starts typing
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }))
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
-  }
+  };
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {}
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Product name is required"
-    }
-
-    if (!formData.sku.trim()) {
-      newErrors.sku = "SKU is required"
-    }
-
-    if (!formData.price || Number.parseFloat(formData.price) < 0) {
-      newErrors.price = "Price must be a non-negative number"
-    }
-
-    if (!formData.quantity || Number.parseInt(formData.quantity) < 0) {
-      newErrors.quantity = "Quantity must be a non-negative number"
-    }
-
-    if (!formData.minStock || Number.parseInt(formData.minStock) < 0) {
-      newErrors.minStock = "Minimum stock must be a non-negative number"
-    }
-
-    if (!formData.category) {
-      newErrors.category = "Category is required"
-    }
-
-    if (!formData.supplierId) {
-      newErrors.supplierId = "Supplier is required"
-    }
-
-    if (!formData.warehouseId) {
-      newErrors.warehouseId = "Warehouse is required"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    const newErrors: Record<string, string> = {};
+    if (!formData.name.trim()) newErrors.name = "Name is required";
+    if (!formData.sku.trim()) newErrors.sku = "SKU is required";
+    if (!formData.price || Number(formData.price) < 0) newErrors.price = "Invalid price";
+    if (!formData.cost || Number(formData.cost) < 0) newErrors.cost = "Invalid cost";
+    if (!formData.supplierId) newErrors.supplierId = "Supplier required";
+    if (!formData.warehouseId) newErrors.warehouseId = "Warehouse required";
+    if (formData.quantity === "" || Number(formData.quantity) < 0) newErrors.quantity = "Quantity must be 0 or more";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!validateForm()) {
-      return
-    }
-
-    setIsSubmitting(true)
+    e.preventDefault();
+    if (!validateForm()) return;
+    setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const payload = {
+        ...formData,
+        price: parseFloat(formData.price),
+        cost: parseFloat(formData.cost),
+        weight: formData.weight ? parseFloat(formData.weight) : null,
+        dimensions: formData.dimensions || null,
+        minimumStock: parseInt(formData.minimumStock),
+        maximumStock: parseInt(formData.maximumStock),
+        quantity: parseInt(formData.quantity), // ✅ Ensure number
+      };
 
-      // Simulate potential errors
-      if (formData.sku.toLowerCase().includes("existing")) {
-        throw new Error("SKU already exists")
-      }
+      console.log("Submitting Product:", payload);
 
-      if (formData.name.toLowerCase().includes("invalid")) {
-        throw new Error("Product name contains invalid characters")
-      }
+      // TODO: replace with actual API call
+      await fetch("/api/product", { method: "POST", body: JSON.stringify(payload) });
 
       toast({
-        title: "Product created!",
-        description: `${formData.name} has been successfully added to your catalog.`,
-      })
+        title: "Product Created!",
+        description: `${formData.name} has been added.`,
+      });
 
-      router.push("/products")
-    } catch (error) {
+      router.push("/products");
+    } catch (err) {
       toast({
-        title: "Error creating product",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        title: "Error",
+        description: err instanceof Error ? err.message : "Invalid fields",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  if (isLoading) {
+  if (supplierLoading || warehouseLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center space-x-4">
-          <Link href="/products">
-            <Button variant="ghost" size="sm" className="text-gray-300 hover:bg-[#2C3444]">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Products
-            </Button>
-          </Link>
-          <h1 className="text-3xl font-semibold text-white">Add New Product</h1>
-        </div>
-
-        <div className="max-w-4xl">
-          <Card className="bg-[#1C2333] border-none">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-[#B6F400] mx-auto mb-4" />
-                  <p className="text-gray-300">Loading suppliers and warehouses...</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-[#B6F400]" />
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center space-x-4">
         <Link href="/products">
           <Button variant="ghost" size="sm" className="text-gray-300 hover:bg-[#2C3444]">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Products
+            Back
           </Button>
         </Link>
         <h1 className="text-3xl font-semibold text-white">Add New Product</h1>
       </div>
 
-      <div className="max-w-4xl">
-        <Card className="bg-[#1C2333] border-none">
-          <CardHeader>
-            <CardTitle className="text-[#B6F400]">Product Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-gray-300">
-                    Product Name <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    className="bg-[#2C3444] border-none text-white"
-                    placeholder="Enter product name"
-                  />
-                  {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-                </div>
+      <Card className="bg-[#1C2333] border-none">
+        <CardHeader>
+          <CardTitle className="text-[#B6F400]">Product Information</CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-visible">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Required fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <InputField label="Product Name" required value={formData.name} onChange={(v: string) => handleInputChange("name", v)} error={errors.name} />
+              <InputField label="SKU" required value={formData.sku} onChange={(v: string) => handleInputChange("sku", v.toUpperCase())} error={errors.sku} />
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="sku" className="text-gray-300">
-                    SKU <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="sku"
-                    value={formData.sku}
-                    onChange={(e) => handleInputChange("sku", e.target.value.toUpperCase())}
-                    className="bg-[#2C3444] border-none text-white font-mono"
-                    placeholder="Enter SKU (e.g., ABC-001)"
-                  />
-                  {errors.sku && <p className="text-red-500 text-sm">{errors.sku}</p>}
-                </div>
-              </div>
+            <TextareaField label="Description" value={formData.description} onChange={(v: string) => handleInputChange("description", v)} />
 
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-gray-300">
-                  Description
-                </Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange("description", e.target.value)}
-                  className="bg-[#2C3444] border-none text-white min-h-[100px]"
-                  placeholder="Enter product description"
-                />
-              </div>
+            {/* Pricing */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <InputField label="Price" type="number" required value={formData.price} onChange={(v: string) => handleInputChange("price", v)} error={errors.price} />
+              <InputField label="Cost" type="number" required value={formData.cost} onChange={(v: string) => handleInputChange("cost", v)} error={errors.cost} />
+            </div>
 
-              {/* Pricing and Inventory */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="price" className="text-gray-300">
-                    Price ($) <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.price}
-                    onChange={(e) => handleInputChange("price", e.target.value)}
-                    className="bg-[#2C3444] border-none text-white"
-                    placeholder="0.00"
-                  />
-                  {errors.price && <p className="text-red-500 text-sm">{errors.price}</p>}
-                </div>
+            {/* Category / Brand / Model */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <InputField label="Category" value={formData.category} onChange={(v: string) => handleInputChange("category", v)} />
+              <InputField label="Brand" value={formData.brand} onChange={(v: string) => handleInputChange("brand", v)} />
+              <InputField label="Model" value={formData.model} onChange={(v: string) => handleInputChange("model", v)} />
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="quantity" className="text-gray-300">
-                    Initial Quantity <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    min="0"
-                    value={formData.quantity}
-                    onChange={(e) => handleInputChange("quantity", e.target.value)}
-                    className="bg-[#2C3444] border-none text-white"
-                    placeholder="0"
-                  />
-                  {errors.quantity && <p className="text-red-500 text-sm">{errors.quantity}</p>}
-                </div>
+            {/* Stock */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <InputField label="Minimum Stock" type="number" value={formData.minimumStock} onChange={(v: string) => handleInputChange("minimumStock", v)} />
+              <InputField label="Maximum Stock" type="number" value={formData.maximumStock} onChange={(v: string) => handleInputChange("maximumStock", v)} />
+              <InputField label="Quantity" type="number" required value={formData.quantity} onChange={(v: string) => handleInputChange("quantity", v)} error={errors.quantity} /> {/* ✅ NEW */}
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="minStock" className="text-gray-300">
-                    Minimum Stock <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="minStock"
-                    type="number"
-                    min="0"
-                    value={formData.minStock}
-                    onChange={(e) => handleInputChange("minStock", e.target.value)}
-                    className="bg-[#2C3444] border-none text-white"
-                    placeholder="0"
-                  />
-                  {errors.minStock && <p className="text-red-500 text-sm">{errors.minStock}</p>}
-                </div>
-              </div>
+            {/* Barcode, Weight, Dimensions */}
+            <InputField label="Barcode" value={formData.barcode} onChange={(v: string) => handleInputChange("barcode", v)} />
+            <InputField label="Weight (kg)" type="number" value={formData.weight} onChange={(v: string) => handleInputChange("weight", v)} />
+            <TextareaField label="Dimensions (string)" value={formData.dimensions} onChange={(v: string) => handleInputChange("dimensions", v)} />
 
-              {/* Category and Associations */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="category" className="text-gray-300">
-                    Category <span className="text-red-500">*</span>
-                  </Label>
-                  <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
-                    <SelectTrigger className="bg-[#2C3444] border-none text-white">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#2C3444] border-[#3C4454]">
-                      {categories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.category && <p className="text-red-500 text-sm">{errors.category}</p>}
-                </div>
+            {/* Supplier + Warehouse */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <SelectField
+                label="Supplier"
+                value={formData.supplierId}
+                options={suppliers.map((s: any) => ({ value: s.id.toString(), label: s.name }))}
+                onChange={(v: string) => handleInputChange("supplierId", v)}
+                error={errors.supplierId}
+              />
+              <SelectField
+                label="Warehouse"
+                value={formData.warehouseId}
+                options={warehouses.map((w: any) => ({ value: w.id.toString(), label: w.name }))}
+                onChange={(v: string) => handleInputChange("warehouseId", v)}
+                error={errors.warehouseId}
+              />
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="supplier" className="text-gray-300">
-                    Supplier <span className="text-red-500">*</span>
-                  </Label>
-                  <Select value={formData.supplierId} onValueChange={(value) => handleInputChange("supplierId", value)}>
-                    <SelectTrigger className="bg-[#2C3444] border-none text-white">
-                      <SelectValue placeholder="Select supplier" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#2C3444] border-[#3C4454]">
-                      {suppliers.map((supplier) => (
-                        <SelectItem key={supplier.id} value={supplier.id.toString()}>
-                          {supplier.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.supplierId && <p className="text-red-500 text-sm">{errors.supplierId}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="warehouse" className="text-gray-300">
-                    Warehouse <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={formData.warehouseId}
-                    onValueChange={(value) => handleInputChange("warehouseId", value)}
-                  >
-                    <SelectTrigger className="bg-[#2C3444] border-none text-white">
-                      <SelectValue placeholder="Select warehouse" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#2C3444] border-[#3C4454]">
-                      {warehouses.map((warehouse) => (
-                        <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
-                          {warehouse.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.warehouseId && <p className="text-red-500 text-sm">{errors.warehouseId}</p>}
-                </div>
-              </div>
-
-              <div className="flex space-x-4 pt-4">
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="bg-[#B6F400] text-[#0B0F1A] hover:bg-[#9ED900]"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Create Product
-                    </>
-                  )}
+            {/* Actions */}
+            <div className="flex space-x-4 pt-4">
+              <Button type="submit" disabled={isSubmitting} className="bg-[#B6F400] text-[#0B0F1A] hover:bg-[#9ED900]">
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                {isSubmitting ? "Saving..." : "Create Product"}
+              </Button>
+              <Link href="/products">
+                <Button type="button" variant="outline" className="border-[#2C3444] text-white hover:bg-[#2C3444] bg-transparent">
+                  <X className="mr-2 h-4 w-4" /> Cancel
                 </Button>
-                <Link href="/products">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-[#2C3444] text-white hover:bg-[#2C3444] bg-transparent"
-                  >
-                    <X className="mr-2 h-4 w-4" />
-                    Cancel
-                  </Button>
-                </Link>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+              </Link>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
+}
+
+/* --- Reusable components --- */
+function InputField({ label, value, onChange, error, type = "text", required = false }: any) {
+  return (
+    <div className="space-y-2">
+      <Label className="text-gray-300">
+        {label} {required && <span className="text-red-500">*</span>}
+      </Label>
+      <Input value={value} type={type} onChange={(e) => onChange(e.target.value)} className="bg-[#2C3444] border-none text-white" />
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+    </div>
+  );
+}
+
+function TextareaField({ label, value, onChange }: any) {
+  return (
+    <div className="space-y-2">
+      <Label className="text-gray-300">{label}</Label>
+      <Textarea value={value} onChange={(e) => onChange(e.target.value)} className="bg-[#2C3444] border-none text-white min-h-[80px]" />
+    </div>
+  );
+}
+
+function SelectField({ label, value, options, onChange, error }: any) {
+  return (
+    <div className="space-y-2">
+      <Label className="text-gray-300">{label}</Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="bg-[#2C3444] border-none text-white">
+          <SelectValue placeholder={`Select ${label}`} />
+        </SelectTrigger>
+        <SelectContent className="bg-[#2C3444] border-[#3C4454]">
+          {options.map((opt: any) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+    </div>
+  );
 }

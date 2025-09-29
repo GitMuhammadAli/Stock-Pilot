@@ -20,10 +20,9 @@ export default function DashboardLayout({
   const [isSidebarVisible, setIsSidebarVisible] = useState<boolean>(true);
   const [isHydrated, setIsHydrated] = useState<boolean>(false);
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
-  
+
   const pathname = usePathname();
   const prevPathnameRef = useRef<string>(pathname);
-  // const transitionTimeoutRef = useRef<NodeJS.Timeout>();
 
   // Handle hydration
   useEffect(() => {
@@ -37,7 +36,7 @@ export default function DashboardLayout({
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      
+
       if (mobile) {
         setIsOpen(false);
         setIsSidebarVisible(false);
@@ -46,7 +45,7 @@ export default function DashboardLayout({
         setIsOpen(true);
       }
     };
-    
+
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -56,26 +55,11 @@ export default function DashboardLayout({
   useEffect(() => {
     if (prevPathnameRef.current !== pathname && isAuthenticated) {
       setIsTransitioning(true);
-      
+
       if (isMobile) {
         setIsSidebarVisible(false);
       }
-      
-      // if (transitionTimeoutRef.current) {
-      //   clearTimeout(transitionTimeoutRef.current);
-      // }
-      
-      // transitionTimeoutRef.current = setTimeout(() => {
-      //   setIsTransitioning(false);
-      //   prevPathnameRef.current = pathname;
-      // }, 100); // Very fast transition
     }
-    
-    return () => {
-      // if (transitionTimeoutRef.current) {
-      //   clearTimeout(transitionTimeoutRef.current);
-      // }
-    };
   }, [pathname, isAuthenticated, isMobile]);
 
   const toggleSidebar = () => {
@@ -86,14 +70,17 @@ export default function DashboardLayout({
     }
   };
 
-  const sidebarContextValue = useMemo(() => ({
-    isOpen,
-    setIsOpen,
-    isMobile,
-    isSidebarVisible,
-    setIsSidebarVisible,
-    toggleSidebar,
-  }), [isOpen, isMobile, isSidebarVisible]);
+  const sidebarContextValue = useMemo(
+    () => ({
+      isOpen,
+      setIsOpen,
+      isMobile,
+      isSidebarVisible,
+      setIsSidebarVisible,
+      toggleSidebar,
+    }),
+    [isOpen, isMobile, isSidebarVisible]
+  );
 
   // Don't render anything if not hydrated or still loading auth
   if (!isHydrated || isLoading) {
@@ -117,8 +104,8 @@ export default function DashboardLayout({
             />
           )}
 
-          {/* Persistent Sidebar */}
-          <div 
+          {/* Sidebar */}
+          <div
             className={`
               ${isSidebarVisible ? "translate-x-0" : "-translate-x-full"} 
               md:translate-x-0 
@@ -126,45 +113,44 @@ export default function DashboardLayout({
               transition-transform duration-200 ease-out
             `}
             style={{
-              width: isOpen ? '16rem' : '4rem',
-              willChange: 'transform, width'
+              width: isOpen ? "16rem" : "4rem",
+              willChange: "transform, width",
             }}
           >
             <AppSidebar />
           </div>
 
-          {/* Main content area */}
+          {/* Main content */}
           <div
             className="flex flex-1 flex-col transition-all duration-200 ease-out"
             style={{
-              marginLeft: isMobile ? 0 : 'auto',
+              marginLeft: isMobile ? 0 : "auto",
               width: isMobile
                 ? "100%"
                 : isOpen
                 ? "calc(100% - 16rem)"
                 : "calc(100% - 4rem)",
-              willChange: 'width, margin'
+              willChange: "width, margin",
             }}
           >
             <TopBar />
-            <div className="@container/main flex flex-1 flex-col p-4 md:p-6 overflow-auto">
+            {/* 👇 scroll is here */}
+            <div className="@container/main flex flex-1 flex-col p-4 md:p-6 h-0 min-h-0 overflow-y-auto">
               <SidebarTrigger
                 className="md:hidden mb-4"
                 onClick={toggleSidebar}
               />
               <Toaster />
-              
-              {/* Content with minimal transition */}
-              <main 
+
+              <main
                 className={`
                   flex-1 transition-opacity duration-100 ease-out
-                  ${isTransitioning ? 'opacity-95' : 'opacity-100'}
+                  ${isTransitioning ? "opacity-95" : "opacity-100"}
                 `}
-                style={{ willChange: 'opacity' }}
+                style={{ willChange: "opacity" }}
               >
                 {children}
               </main>
-              
             </div>
           </div>
         </div>

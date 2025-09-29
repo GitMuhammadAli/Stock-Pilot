@@ -160,6 +160,12 @@ export interface SupplierContextType {
 
 // Product Interface
 export interface Product {
+    totalValue: any;
+    lastUpdated: string | number | Date;
+    minStock: number;
+    category: string;
+    category: string;
+    minStock: number;
     id: string;
     name: string;
     description?: string;
