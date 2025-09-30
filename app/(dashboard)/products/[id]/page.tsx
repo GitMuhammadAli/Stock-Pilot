@@ -29,6 +29,9 @@ import {
   TrendingDown,
   ArrowUpDown,
   FileText,
+  Barcode as BarcodeIcon,
+  Ruler,
+  Layers,
 } from "lucide-react";
 import { useProduct } from "@/providers/productProvider";
 
@@ -65,10 +68,10 @@ export default function ProductDetailsPage() {
     }
   }, [getAllProducts, products]);
 
-  // 🎯 Find the current product from context
+  // 🎯 Find the current product
   const product = products?.find((p: any) => String(p.id) === String(id));
 
-  // Dummy movement + related data (until backend provides it)
+  // Dummy movements + related products
   useEffect(() => {
     if (product) {
       setStockMovements([
@@ -97,7 +100,7 @@ export default function ProductDetailsPage() {
           .filter(
             (p: any) => p.category === product.category && p.id !== product.id
           )
-          .slice(0, 3) // show 3 related
+          .slice(0, 3)
           .map((p: any) => ({
             id: p.id,
             name: p.name,
@@ -185,7 +188,8 @@ export default function ProductDetailsPage() {
                 Product Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
+              {/* Original Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <p className="text-gray-300">{product.description}</p>
@@ -230,6 +234,58 @@ export default function ProductDetailsPage() {
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* 🔥 New Detailed Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-300">
+                <div>
+                  <p className="text-gray-400 text-xs mb-1">Price</p>
+                  <p>${product.price}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs mb-1">Cost</p>
+                  <p>{product.costPrice ? `$${product.costPrice}` : "—"}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs mb-1">Quantity</p>
+                  <p>{product.quantity}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs mb-1">Minimum Stock</p>
+                  <p>{product.minStock}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs mb-1">Maximum Stock</p>
+                  <p>{product.maxStockLevel}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs mb-1">Brand</p>
+                  <p>{product.brand || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs mb-1">Model</p>
+                  <p>{product.model || "—"}</p>
+                </div>
+                <div className="flex items-center">
+                  <BarcodeIcon className="h-4 w-4 mr-2 text-[#B6F400]" />
+                  <p>{product.barcode || "—"}</p>
+                </div>
+                <div className="flex items-center">
+                  <Ruler className="h-4 w-4 mr-2 text-[#B6F400]" />
+                  <p>
+                    {product.dimensions
+                      ? `${product.dimensions.length || "-"} x ${
+                          product.dimensions.width || "-"
+                        } x ${product.dimensions.height || "-"} ${
+                          product.dimensions.unit || ""
+                        }`
+                      : "—"}
+                  </p>
+                </div>
+                <div className="flex items-center">
+                  <Layers className="h-4 w-4 mr-2 text-[#B6F400]" />
+                  <p>{product.category || "—"}</p>
                 </div>
               </div>
             </CardContent>

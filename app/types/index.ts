@@ -158,69 +158,227 @@ export interface SupplierContextType {
   getAllSuppliersForUser: (userId: string) => Promise<void>;
 }
 
-// Product Interface
+// // Product Interface
+// export interface Product {
+//     weight: string;
+//     brand: string;
+//     brand: string;
+//     weight: string;
+//     dimensions: string;
+//     color: string;
+//     status: string;
+//     totalValue: any;
+//     lastUpdated: string | number | Date;
+//     minStock: number;
+//     category: string;
+//     category: string;
+//     minStock: number;
+//     id: string;
+//     name: string;
+//     description?: string;
+//     sku: string; // Stock Keeping Unit - should be unique
+//     price: number;
+//     quantity: number;
+//     supplierId: string;
+//     supplier?: Supplier; // Embedded supplier object
+//     warehouseId: string;
+//     warehouse?: Warehouse; // Embedded warehouse object
+//     createdById: string;
+//     createdBy?: User; // Embedded user object
+//     createdAt: string; // ISO 8601 string
+//     updatedAt: string; // ISO 8601 string
+// }
+
+// // Data shape for creating a new Product
+// export interface CreateProductData {
+//     name: string;
+//     description?: string;
+//     sku: string;
+//     price: number;
+//     quantity: number;
+//     supplierId: string; // UUID of the supplier
+//     warehouseId: string; // UUID of the warehouse
+//     // createdById is handled by the backend from the auth token
+// }
+
+// // Data shape for updating an existing Product (all fields optional)
+// export interface UpdateProductData {
+//     name?: string;
+//     description?: string;
+//     sku?: string;
+//     price?: number;
+//     quantity?: number;
+//     supplierId?: string; // UUID of the supplier
+//     warehouseId?: string; // UUID of the warehouse
+// }
+
+// // Interface for the value exposed by the ProductContext
+// export interface ProductContextType {
+//     products: Product[];
+//     loading: boolean;
+//     error: string | null;
+//     selectedProduct: Product | null;
+//     createProduct: (data: CreateProductData) => Promise<boolean>;
+//     updateProduct: (id: string, data: UpdateProductData) => Promise<boolean>;
+//     deleteProduct: (id: string) => Promise<boolean>;
+//     getProduct: (id: string) => Promise<Product | null>;
+//     getAllProducts: () => Promise<void>;
+//     getAllProductsForUser: (userId: string) => Promise<void>;
+//     getAllProductsForSupplier: (supplierId: string) => Promise<void>;
+//     getAllProductsForWarehouse: (warehouseId: string) => Promise<void>;
+//     selectProduct: (product: Product) => void;
+// }
+
+
+// Product Status Enum
+export enum ProductStatus {
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+  DISCONTINUED = "discontinued",
+  OUT_OF_STOCK = "out_of_stock"
+}
+
+// Product Condition Enum
+export enum ProductCondition {
+  NEW = "new",
+  REFURBISHED = "refurbished",
+  USED = "used",
+  DAMAGED = "damaged"
+}
+
+// -----------------------------
+// Product Interface (Entity Shape)
+// -----------------------------
 export interface Product {
-    totalValue: any;
-    lastUpdated: string | number | Date;
-    minStock: number;
-    category: string;
-    category: string;
-    minStock: number;
-    id: string;
+  lastUpdated: string | number | Date;
+  totalValue: any;
+  minStock: number;
+  id: string;
+  name: string;
+  description?: string;
+  sku: string;
+  barcode?: string;
+  quantity: number;
+  category?: string;
+  subCategory?: string;
+  brand?: string;
+  model?: string;
+  price: number;
+  costPrice?: number;
+  status: ProductStatus;
+  condition: ProductCondition;
+
+  // Inventory Management
+  minStockLevel: number;
+  maxStockLevel: number;
+  reorderPoint: number;
+  reservedQuantity: number;
+
+  // Physical Properties
+  weight?: number; // in kg
+  dimensions?: {
+    length?: number;
+    width?: number;
+    height?: number;
+    unit?: string;
+  };
+
+  // Tracking
+  lastStockUpdate?: string; // ISO 8601 string
+  totalSold: number;
+  totalRevenue: number;
+
+  // Media
+  images?: string[];
+  documents?: Array<{
     name: string;
-    description?: string;
-    sku: string; // Stock Keeping Unit - should be unique
-    price: number;
-    quantity: number;
-    supplierId: string;
-    supplier?: Supplier; // Embedded supplier object
-    warehouseId: string;
-    warehouse?: Warehouse; // Embedded warehouse object
-    createdById: string;
-    createdBy?: User; // Embedded user object
-    createdAt: string; // ISO 8601 string
-    updatedAt: string; // ISO 8601 string
+    url: string;
+    type: string;
+  }>;
+
+  // SEO / Metadata
+  metadata?: Record<string, any>;
+
+  // Relations
+  warehouseId?: string;
+  warehouse?: Warehouse; // Embedded Warehouse
+  supplierId?: string;
+  supplier?: Supplier;   // Embedded Supplier
+  createdById?: string;
+  createdBy?: User;      // Embedded User
+
+  // BaseEntity fields
+  createdAt: string; // ISO 8601 string
+  updatedAt: string; // ISO 8601 string
 }
 
-// Data shape for creating a new Product
+// -----------------------------
+// Data Shape for Creating a Product
+// -----------------------------
 export interface CreateProductData {
+  name: string;
+  description?: string;
+  sku: string;
+  barcode?: string;
+  quantity: number;
+  category?: string;
+  subCategory?: string;
+  brand?: string;
+  model?: string;
+  price: number;
+  costPrice?: number;
+  status?: ProductStatus;
+  condition?: ProductCondition;
+  minStockLevel?: number;
+  maxStockLevel?: number;
+  reorderPoint?: number;
+  reservedQuantity?: number;
+  weight?: number;
+  dimensions?: {
+    length?: number;
+    width?: number;
+    height?: number;
+    unit?: string;
+  };
+  images?: string[];
+  documents?: Array<{
     name: string;
-    description?: string;
-    sku: string;
-    price: number;
-    quantity: number;
-    supplierId: string; // UUID of the supplier
-    warehouseId: string; // UUID of the warehouse
-    // createdById is handled by the backend from the auth token
+    url: string;
+    type: string;
+  }>;
+  metadata?: Record<string, any>;
+  supplierId?: string;
+  warehouseId?: string;
 }
 
-// Data shape for updating an existing Product (all fields optional)
-export interface UpdateProductData {
-    name?: string;
-    description?: string;
-    sku?: string;
-    price?: number;
-    quantity?: number;
-    supplierId?: string; // UUID of the supplier
-    warehouseId?: string; // UUID of the warehouse
-}
+// -----------------------------
+// Data Shape for Updating a Product
+// -----------------------------
+export interface UpdateProductData extends Partial<CreateProductData> {}
 
-// Interface for the value exposed by the ProductContext
+// -----------------------------
+// Context Interface
+// -----------------------------
 export interface ProductContextType {
-    products: Product[];
-    loading: boolean;
-    error: string | null;
-    selectedProduct: Product | null;
-    createProduct: (data: CreateProductData) => Promise<boolean>;
-    updateProduct: (id: string, data: UpdateProductData) => Promise<boolean>;
-    deleteProduct: (id: string) => Promise<boolean>;
-    getProduct: (id: string) => Promise<Product | null>;
-    getAllProducts: () => Promise<void>;
-    getAllProductsForUser: (userId: string) => Promise<void>;
-    getAllProductsForSupplier: (supplierId: string) => Promise<void>;
-    getAllProductsForWarehouse: (warehouseId: string) => Promise<void>;
-    selectProduct: (product: Product) => void;
+  products: Product[];
+  productMap: Record<string, Product>;
+  loading: boolean;
+  error: string | null;
+  selectedProduct: Product | null;
+  createProduct: (data: CreateProductData) => Promise<boolean>;
+  updateProduct: (id: string, data: UpdateProductData) => Promise<boolean>;
+  deleteProduct: (id: string) => Promise<boolean>;
+  getProduct: (id: string) => Promise<Product | null>;
+  getAllProducts: (force?: boolean) => Promise<Product[] | null>;
+getAllProductsForUser: (userId: string) => Promise<Product[] | null>;
+getAllProductsForSupplier: (supplierId: string) => Promise<Product[] | null>;
+getAllProductsForWarehouse: (warehouseId: string) => Promise<Product[] | null>;
+
+  selectProduct: (product: Product) => void;
 }
+
+
+
 
 // src/types/index.ts (additions)
 

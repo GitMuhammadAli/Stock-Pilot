@@ -1,251 +1,285 @@
-// src/contexts/SupplierContext.tsx
-"use client";
+    // src/contexts/SupplierContext.tsx
+    "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { useRouter } from "next/navigation"; // useRouter is imported in your example, keeping it here
+    import React, {
+    createContext,
+    useContext,
+    useState,
+    useEffect,
+    ReactNode,
+    useCallback,
+    useRef,
+    } from "react";
+    import { useRouter } from "next/navigation";
 
-// Import your defined types
-import {
+    import {
     Supplier,
     CreateSupplierData,
     UpdateSupplierData,
     SupplierContextType,
-    User // Assuming User interface is also in types
-} from '../types/index'; // Adjust the import path as per your project structure
+    User,
+    } from "../types/index"; // adjust path
 
-// Context creation with an initial undefined value
-const SupplierContext = createContext<SupplierContextType | undefined>(undefined);
+    // Context creation
+    const SupplierContext = createContext<SupplierContextType | undefined>(
+    undefined
+    );
 
-// Props interface for the SupplierProvider
-interface SupplierProviderProps {
+    interface SupplierProviderProps {
     children: ReactNode;
-    // You might want to pass the current user's ID here if not getting from another context
-    // For now, assuming you'll get it where you call getAllSuppliersForUser
-}
+    }
 
-export function SupplierProvider({ children }: SupplierProviderProps) {
+    export function SupplierProvider({ children }: SupplierProviderProps) {
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
-    const router = useRouter(); // Keeping router for consistency with your example, though not strictly used in all methods here
+    const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(
+        null
+    );
+    const router = useRouter();
 
-    // Helper to set headers, including Authorization token if available (assuming you manage it globally)
-    // In a real app, you'd get this from an AuthContext or a secure storage
+    const hasFetched = useRef(false); // ✅ prevents duplicate fetches
+
+    // ✅ Helper to build headers with token
     const getAuthHeaders = () => {
-        const token = localStorage.getItem('token'); // Example: get token from localStorage
+        const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
         return {
-            'Content-Type': 'application/json',
-            ...(token && { 'Authorization': `Bearer ${token}` }),
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
         };
     };
 
-    // Fetch all suppliers (GET /api/supplier)
-    const getAllSuppliers = useCallback(async () => {
+    // ================== API METHODS ==================
+
+    // Fetch all suppliers
+    const getAllSuppliers = useCallback(
+        async (force = false) => {
+        if (suppliers.length > 0 && !force) return; // ✅ use cache
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch('/api/supplier', {
-                method: 'GET',
-                headers: getAuthHeaders(),
+            const response = await fetch("/api/supplier", {
+            method: "GET",
+            headers: getAuthHeaders(),
             });
 
-            const result: { success: boolean; data?: Supplier[]; message?: string } = await response.json();
+            const result: {
+            success: boolean;
+            data?: Supplier[];
+            message?: string;
+            } = await response.json();
 
             if (result.success && result.data) {
-                setSuppliers(result.data);
+            setSuppliers(result.data);
             } else {
-                setError(result.message || 'Failed to fetch all suppliers');
+            setError(result.message || "Failed to fetch all suppliers");
             }
         } catch (err: any) {
-            setError('An error occurred while fetching all suppliers: ' + err.message);
+            setError("An error occurred while fetching all suppliers");
             console.error(err);
         } finally {
             setLoading(false);
         }
-    }, []); // No dependencies as it's a general fetch
+        },
+        [suppliers.length]
+    );
 
-    // Fetch suppliers for a specific user (GET /api/supplier/user/{userId})
-    // Note: The backend route expects a userId in the path.
-    // Ensure you pass the current logged-in user's ID to this function from your UI.
-    const getAllSuppliersForUser = useCallback(async (userId: string) => {
+    // Fetch suppliers for specific user
+    const getAllSuppliersForUser = useCallback(
+        async (userId: string, force = false) => {
+        if (suppliers.length > 0 && !force) return; // ✅ use cache
         setLoading(true);
         setError(null);
         try {
             const response = await fetch(`/api/supplier/user/${userId}`, {
-                method: 'GET',
-                headers: getAuthHeaders(),
+            method: "GET",
+            headers: getAuthHeaders(),
             });
 
-            const result: { success: boolean; data?: Supplier[]; message?: string } = await response.json();
+            const result: {
+            success: boolean;
+            data?: Supplier[];
+            message?: string;
+            } = await response.json();
 
             if (result.success && result.data) {
-                setSuppliers(result.data);
+            setSuppliers(result.data);
             } else {
-                setError(result.message || 'Failed to fetch user-specific suppliers');
+            setError(result.message || "Failed to fetch user suppliers");
             }
         } catch (err: any) {
-            setError('An error occurred while fetching user-specific suppliers: ' + err.message);
+            setError("An error occurred while fetching user suppliers");
             console.error(err);
         } finally {
             setLoading(false);
         }
-    }, []); // userId is a parameter, so it's not a dependency here
+        },
+        [suppliers.length]
+    );
 
-    // Get a single supplier by ID (GET /api/supplier/{id})
+    // Fetch single supplier
     const getSupplier = useCallback(async (id: string): Promise<Supplier | null> => {
+        // ✅ check cache first
+        const existing = suppliers.find((s) => s.id === id);
+        if (existing) {
+        setSelectedSupplier(existing);
+        return existing;
+        }
+
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`/api/supplier/${id}`, {
-                method: 'GET',
-                headers: getAuthHeaders(),
-            });
+        const response = await fetch(`/api/supplier/${id}`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+        });
 
-            const result: { success: boolean; data?: Supplier; message?: string } = await response.json();
+        const result: {
+            success: boolean;
+            data?: Supplier;
+            message?: string;
+        } = await response.json();
 
-            if (result.success && result.data) {
-                return result.data;
-            } else {
-                setError(result.message || 'Failed to fetch supplier');
-                return null;
-            }
-        } catch (err: any) {
-            setError('An error occurred while fetching the supplier: ' + err.message);
-            console.error(err);
+        if (result.success && result.data) {
+            setSelectedSupplier(result.data);
+            return result.data;
+        } else {
+            setError(result.message || "Failed to fetch supplier");
             return null;
-        } finally {
-            setLoading(false);
         }
-    }, []);
+        } catch (err: any) {
+        setError("An error occurred while fetching supplier");
+        console.error(err);
+        return null;
+        } finally {
+        setLoading(false);
+        }
+    }, [suppliers]);
 
-    // Create a new supplier (POST /api/supplier)
+    // Create supplier
     const createSupplier = useCallback(async (data: CreateSupplierData): Promise<boolean> => {
         setLoading(true);
         setError(null);
         try {
-            // The `createdById` field is expected by your backend service.
-            // As per the backend API, it's typically inferred from the auth token
-            // by the `withAuth` middleware and service layer.
-            // So, you usually don't send it from the frontend explicitly in the body,
-            // but ensure your authentication setup is passing the token.
-            const response = await fetch('/api/supplier', {
-                method: 'POST',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(data),
-            });
+        const response = await fetch("/api/supplier", {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
 
-            const result: { success: boolean; data?: Supplier; message?: string } = await response.json();
+        const result: {
+            success: boolean;
+            data?: Supplier;
+            message?: string;
+        } = await response.json();
 
-            if (result.success && result.data) {
-                setSuppliers(prev => [...prev, result.data!]); // Add new supplier to state
-                return true;
-            } else {
-                setError(result.message || 'Failed to create supplier');
-                return false;
-            }
-        } catch (err: any) {
-            setError('An error occurred while creating the supplier: ' + err.message);
-            console.error(err);
+        if (result.success && result.data) {
+            setSuppliers((prev) => [...prev, result.data!]);
+            return true;
+        } else {
+            setError(result.message || "Failed to create supplier");
             return false;
+        }
+        } catch (err: any) {
+        setError("An error occurred while creating supplier");
+        console.error(err);
+        return false;
         } finally {
-            setLoading(false);
+        setLoading(false);
         }
     }, []);
 
-    // Update an existing supplier (PUT /api/supplier/{id})
-    const updateSupplier = useCallback(async (id: string, data: UpdateSupplierData): Promise<boolean> => {
+    // Update supplier
+    const updateSupplier = useCallback(
+        async (id: string, data: UpdateSupplierData): Promise<boolean> => {
         setLoading(true);
         setError(null);
         try {
             const response = await fetch(`/api/supplier/${id}`, {
-                method: 'PUT',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(data),
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
             });
 
-            const result: { success: boolean; data?: Supplier; message?: string } = await response.json();
+            const result: {
+            success: boolean;
+            data?: Supplier;
+            message?: string;
+            } = await response.json();
 
             if (result.success && result.data) {
-                setSuppliers(prev =>
-                    prev.map(supplier =>
-                        supplier.id === id ? { ...supplier, ...result.data } : supplier
-                    )
-                );
-                // If the selected supplier is updated, update it as well
-                if (selectedSupplier && selectedSupplier.id === id) {
-                    setSelectedSupplier(result.data);
-                }
-                return true;
+            setSuppliers((prev) =>
+                prev.map((s) => (s.id === id ? { ...s, ...result.data } : s))
+            );
+            if (selectedSupplier?.id === id) {
+                setSelectedSupplier({ ...selectedSupplier, ...result.data });
+            }
+            return true;
             } else {
-                setError(result.message || 'Failed to update supplier');
-                return false;
+            setError(result.message || "Failed to update supplier");
+            return false;
             }
         } catch (err: any) {
-            setError('An error occurred while updating the supplier: ' + err.message);
+            setError("An error occurred while updating supplier");
             console.error(err);
             return false;
         } finally {
             setLoading(false);
         }
-    }, [selectedSupplier]); // Dependency on selectedSupplier
+        },
+        [selectedSupplier]
+    );
 
-    // Delete a supplier (DELETE /api/supplier/{id})
-    const deleteSupplier = useCallback(async (id: string): Promise<boolean> => {
+    // Delete supplier
+    const deleteSupplier = useCallback(
+        async (id: string): Promise<boolean> => {
         setLoading(true);
         setError(null);
         try {
             const response = await fetch(`/api/supplier/${id}`, {
-                method: 'DELETE',
-                headers: getAuthHeaders(),
+            method: "DELETE",
+            headers: getAuthHeaders(),
             });
 
-            const result: { success: boolean; message?: string } = await response.json();
+            const result: { success: boolean; message?: string } =
+            await response.json();
 
             if (result.success) {
-                setSuppliers(prev => prev.filter(supplier => supplier.id !== id));
-                // Clear selected supplier if it was the one deleted
-                if (selectedSupplier && selectedSupplier.id === id) {
-                    setSelectedSupplier(null);
-                }
-                return true;
+            setSuppliers((prev) => prev.filter((s) => s.id !== id));
+            if (selectedSupplier?.id === id) {
+                setSelectedSupplier(null);
+            }
+            return true;
             } else {
-                setError(result.message || 'Failed to delete supplier');
-                return false;
+            setError(result.message || "Failed to delete supplier");
+            return false;
             }
         } catch (err: any) {
-            setError('An error occurred while deleting the supplier: ' + err.message);
+            setError("An error occurred while deleting supplier");
             console.error(err);
             return false;
         } finally {
             setLoading(false);
         }
-    }, [selectedSupplier]); // Dependency on selectedSupplier
+        },
+        [selectedSupplier]
+    );
 
-    // Select a supplier for detailed view or editing
-  const selectSupplier = useCallback((supplier: Supplier | null) => {
-    setSelectedSupplier(supplier);
-}, []);
+    // Select supplier
+    const selectSupplier = useCallback((supplier: Supplier | null) => {
+        setSelectedSupplier(supplier);
+    }, []);
 
-    // Initial load: Fetch all suppliers created by the current user
-    // You'll need to pass the actual logged-in user ID here.
-    // Example: If you have an AuthContext, get the user ID from it.
-    // For now, let's assume a placeholder or that `getAllSuppliers()` is preferred initially.
+    // ================== INITIAL LOAD ==================
     useEffect(() => {
-        // You would typically get the userId from your AuthContext here.
-        // For demonstration, let's assume you're calling a generic getAllSuppliers()
-        // Or if you have a dummy user ID or are sure the backend handles /user without ID
-        getAllSuppliers();
-        // If you specifically want to use getAllSuppliersForUser, ensure you have the userId:
-        // const currentUserId = "YOUR_LOGGED_IN_USER_ID_HERE"; // Replace with actual user ID from AuthContext
-        // if (currentUserId) {
-        //   getAllSuppliersForUser(currentUserId);
-        // } else {
-        //   getAllSuppliers(); // Fallback if no user is logged in or user ID is unavailable
-        // }
-    }, [getAllSuppliers]); // Only re-run if getAllSuppliers changes (which it won't due to useCallback)
+        if (!hasFetched.current) {
+        getAllSuppliers(); 
+        hasFetched.current = true;
+        }
+    }, [getAllSuppliers]);
 
-    // The value object to be passed to consumers of the context
+    // ================== CONTEXT VALUE ==================
     const value: SupplierContextType = {
         suppliers,
         loading,
@@ -262,16 +296,16 @@ export function SupplierProvider({ children }: SupplierProviderProps) {
 
     return (
         <SupplierContext.Provider value={value}>
-            {children}
+        {children}
         </SupplierContext.Provider>
     );
-}
+    }
 
-// Custom hook to consume the WarehouseContext
-export function useSupplier() {
+    // Custom hook
+    export function useSupplier() {
     const context = useContext(SupplierContext);
-    if (context === undefined) {
-        throw new Error('useSupplier must be used within a SupplierProvider');
+    if (!context) {
+        throw new Error("useSupplier must be used within a SupplierProvider");
     }
     return context;
-}
+    }

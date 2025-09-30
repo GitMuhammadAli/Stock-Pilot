@@ -40,7 +40,7 @@ export default function NewProductPage() {
     maximumStock: "100",
     supplierId: "",
     warehouseId: "",
-    quantity: "0", // <-- NEW
+    quantity: "0",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});

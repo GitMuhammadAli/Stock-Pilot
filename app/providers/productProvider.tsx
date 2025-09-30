@@ -5,27 +5,26 @@ import React, {
   createContext,
   useContext,
   useState,
-  useEffect,
-  ReactNode,
   useCallback,
   useMemo,
+  ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-
-// Import your defined types
 import {
   Product,
   CreateProductData,
   UpdateProductData,
   ProductContextType,
-} from "../types/index"; // adjust path
+} from "../types/index";
 
-// Create Context
+// Context
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 interface ProductProviderProps {
   children: ReactNode;
 }
+
+let productFetchCache: Record<string, Promise<Product[] | null>> = {};
 
 export function ProductProvider({ children }: ProductProviderProps) {
   const [products, setProducts] = useState<Product[]>([]);
@@ -37,23 +36,28 @@ export function ProductProvider({ children }: ProductProviderProps) {
 
   // Auth headers
   const getAuthHeaders = () => {
-    const token = localStorage.getItem("token");
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     return {
       "Content-Type": "application/json",
       ...(token && { Authorization: `Bearer ${token}` }),
     };
   };
 
-  // --- Fetch Helper (unwraps your nested response) ---
-  const handleResponse = async <T,>(
-    response: Response
-  ): Promise<T | null> => {
+  // --- Fetch Helper (unwraps nested API response) ---
+  const handleResponse = async <T,>(response: Response): Promise<T | null> => {
     try {
       const raw = await response.json();
-      // expected shape: { success, data: { success, message, data: [...] } }
-      if (raw.success && raw.data?.data) {
-        return raw.data.data as T;
+      console.log(raw)
+
+      if (raw.success) {
+        if (Array.isArray(raw.data?.data)) {
+          return raw.data.data as T;
+        }
+        if (raw.data && !Array.isArray(raw.data)) {
+          return raw.data as T;
+        }
       }
+
       console.error("API error:", raw);
       setError(raw.message || "Unexpected API response");
       return null;
@@ -66,7 +70,10 @@ export function ProductProvider({ children }: ProductProviderProps) {
 
   // --- CRUD OPERATIONS ---
 
-  const getAllProducts = useCallback(async () => {
+ const getAllProducts = useCallback(
+  async (force = false): Promise<Product[] | null> => {
+    if (!force && products.length > 0) return products; 
+
     setLoading(true);
     setError(null);
     try {
@@ -75,32 +82,53 @@ export function ProductProvider({ children }: ProductProviderProps) {
         headers: getAuthHeaders(),
       });
       const list = await handleResponse<Product[]>(res);
-      if (list) setProducts(list);
+      if (list) {
+        setProducts(list);
+        return list; // ✅ always return
+      }
+      return null;
     } catch (err: any) {
       setError("Failed to fetch products: " + err.message);
+      return null;
     } finally {
       setLoading(false);
     }
-  }, []);
+  },
+  [products]
+);
+
 
   const getAllProductsForUser = useCallback(async (userId: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/product/user/${userId}`, {
-        method: "GET",
-        headers: getAuthHeaders(),
-      });
-      const list = await handleResponse<Product[]>(res);
-      if (list) setProducts(list);
-    } catch (err: any) {
-      setError("Failed to fetch products for user: " + err.message);
-    } finally {
-      setLoading(false);
-    }
+    if (await productFetchCache[userId]) return productFetchCache[userId];
+
+    productFetchCache[userId] = (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/product/user/${userId}`, {
+          method: "GET",
+          headers: getAuthHeaders(),
+        });
+        const list = await handleResponse<Product[]>(res);
+        if (list) setProducts(list);
+        return list;
+      } catch (err: any) {
+        setError("Failed to fetch products for user: " + err.message);
+        return null;
+      } finally {
+        setLoading(false);
+        delete productFetchCache[userId];
+      }
+    })();
+
+    return productFetchCache[userId];
   }, []);
 
-  const getAllProductsForSupplier = useCallback(async (supplierId: string) => {
+
+
+
+const getAllProductsForSupplier = useCallback(
+  async (supplierId: string): Promise<Product[] | null> => {
     setLoading(true);
     setError(null);
     try {
@@ -110,14 +138,19 @@ export function ProductProvider({ children }: ProductProviderProps) {
       });
       const list = await handleResponse<Product[]>(res);
       if (list) setProducts(list);
+      return list;
     } catch (err: any) {
       setError("Failed to fetch products for supplier: " + err.message);
+      return null;
     } finally {
       setLoading(false);
     }
-  }, []);
+  },
+  []
+);
 
-  const getAllProductsForWarehouse = useCallback(async (warehouseId: string) => {
+const getAllProductsForWarehouse = useCallback(
+  async (warehouseId: string): Promise<Product[] | null> => {
     setLoading(true);
     setError(null);
     try {
@@ -127,14 +160,26 @@ export function ProductProvider({ children }: ProductProviderProps) {
       });
       const list = await handleResponse<Product[]>(res);
       if (list) setProducts(list);
+      return list ?? null; // ✅ make sure it always returns
     } catch (err: any) {
       setError("Failed to fetch products for warehouse: " + err.message);
+      return null;
     } finally {
       setLoading(false);
     }
-  }, []);
+  },
+  []
+);
+
+
+
 
   const getProduct = useCallback(async (id: string): Promise<Product | null> => {
+    if (!id) return null;
+
+    const existing = products.find((p) => p.id === id);
+    if (existing) return existing;
+
     setLoading(true);
     setError(null);
     try {
@@ -150,11 +195,14 @@ export function ProductProvider({ children }: ProductProviderProps) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [products]);
 
   const createProduct = useCallback(async (data: CreateProductData) => {
-    setLoading(true);
-    setError(null);
+    const tempId = "temp-" + Date.now();
+    const optimisticProduct: Product = { id: tempId, ...data } as Product;
+
+    setProducts((prev) => [...prev, optimisticProduct]);
+
     try {
       const res = await fetch("/api/product", {
         method: "POST",
@@ -163,22 +211,23 @@ export function ProductProvider({ children }: ProductProviderProps) {
       });
       const product = await handleResponse<Product>(res);
       if (product) {
-        setProducts((prev) => [...prev, product]);
+        setProducts((prev) => prev.map((p) => (p.id === tempId ? product : p)));
         return true;
       }
-      return false;
+      throw new Error("Product creation failed");
     } catch (err: any) {
+      setProducts((prev) => prev.filter((p) => p.id !== tempId));
       setError("Failed to create product: " + err.message);
       return false;
-    } finally {
-      setLoading(false);
     }
   }, []);
 
   const updateProduct = useCallback(
     async (id: string, data: UpdateProductData) => {
-      setLoading(true);
-      setError(null);
+      setProducts((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, ...data } as Product : p))
+      ); // optimistic
+
       try {
         const res = await fetch(`/api/product/${id}`, {
           method: "PUT",
@@ -193,12 +242,10 @@ export function ProductProvider({ children }: ProductProviderProps) {
           if (selectedProduct?.id === id) setSelectedProduct(updated);
           return true;
         }
-        return false;
+        throw new Error("Update failed");
       } catch (err: any) {
         setError("Failed to update product: " + err.message);
         return false;
-      } finally {
-        setLoading(false);
       }
     },
     [selectedProduct]
@@ -206,8 +253,9 @@ export function ProductProvider({ children }: ProductProviderProps) {
 
   const deleteProduct = useCallback(
     async (id: string) => {
-      setLoading(true);
-      setError(null);
+      const prevProducts = [...products];
+      setProducts((prev) => prev.filter((p) => p.id !== id)); // optimistic
+
       try {
         const res = await fetch(`/api/product/${id}`, {
           method: "DELETE",
@@ -215,33 +263,36 @@ export function ProductProvider({ children }: ProductProviderProps) {
         });
         const raw = await res.json();
         if (raw.success) {
-          setProducts((prev) => prev.filter((p) => p.id !== id));
           if (selectedProduct?.id === id) setSelectedProduct(null);
           return true;
         }
-        setError(raw.message || "Failed to delete product");
-        return false;
+        throw new Error(raw.message || "Failed to delete");
       } catch (err: any) {
+        setProducts(prevProducts); // rollback
         setError("Failed to delete product: " + err.message);
         return false;
-      } finally {
-        setLoading(false);
       }
     },
-    [selectedProduct]
+    [products, selectedProduct]
   );
 
   const selectProduct = useCallback((product: Product) => {
     setSelectedProduct(product);
   }, []);
 
-  useEffect(() => {
-    getAllProducts();
-  }, [getAllProducts]);
+  // --- Derived: O(1) productMap ---
+  const productMap = useMemo(() => {
+    const map: Record<string, Product> = {};
+    products.forEach((p) => {
+      map[p.id] = p;
+    });
+    return map;
+  }, [products]);
 
   const value: ProductContextType = useMemo(
     () => ({
       products,
+      productMap,
       loading,
       error,
       selectedProduct,
@@ -257,6 +308,7 @@ export function ProductProvider({ children }: ProductProviderProps) {
     }),
     [
       products,
+      productMap,
       loading,
       error,
       selectedProduct,
@@ -272,9 +324,7 @@ export function ProductProvider({ children }: ProductProviderProps) {
     ]
   );
 
-  return (
-    <ProductContext.Provider value={value}>{children}</ProductContext.Provider>
-  );
+  return <ProductContext.Provider value={value}>{children}</ProductContext.Provider>;
 }
 
 export function useProduct() {

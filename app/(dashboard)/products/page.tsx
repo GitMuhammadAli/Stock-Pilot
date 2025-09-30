@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -38,7 +38,7 @@ import { useProduct } from "@/providers/productProvider"
 
 export default function ProductsPage() {
   const { toast } = useToast()
-  const { products, loading, error, deleteProduct } = useProduct()
+  const { products, getAllProducts, loading, error, deleteProduct } = useProduct()
 
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedSupplier, setSelectedSupplier] = useState("all")
@@ -46,7 +46,11 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [priceRange, setPriceRange] = useState("all")
 
-  // 🔎 Filter logic
+  // 🚀 Fetch products on mount
+  useEffect(() => {
+    getAllProducts()
+  }, [getAllProducts])
+
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const matchesSearch =
@@ -87,11 +91,7 @@ export default function ProductsPage() {
   }, [products, searchTerm, selectedSupplier, selectedWarehouse, selectedCategory, priceRange])
 
   // 🗑️ Handle delete
-  const handleDeleteProduct = async (
-    productId: string,
-    productName: string,
-    sku: string
-  ) => {
+  const handleDeleteProduct = async (productId: string, productName: string, sku: string) => {
     const success = await deleteProduct(productId)
     if (success) {
       toast({
@@ -137,7 +137,6 @@ export default function ProductsPage() {
   ).length
   const outOfStockProducts = products.filter((p) => p.quantity === 0).length
   const totalValue = products.reduce((sum, p) => sum + p.price * p.quantity, 0)
-
   return (
     <div className="h-full overflow-y-auto pr-2 space-y-6">
       {/* Header */}
