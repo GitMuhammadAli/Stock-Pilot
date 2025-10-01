@@ -14,6 +14,8 @@ import { Inter } from "next/font/google";
 import { WarehouseProvider } from "./providers/wareHouseProvider";
 import { SupplierProvider } from "./providers/supplierProvider";
 import { ProductProvider } from "./providers/productProvider";
+import { OrderItemProvider } from "./providers/orderItemProvider";
+import { OrderProvider } from "./providers/orderProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -43,7 +45,11 @@ export default async function RootLayout({
         <AuthProvider>
           <WarehouseProvider>
             <ProductProvider>
-              <SupplierProvider>{children}</SupplierProvider>
+              <OrderProvider>
+                <OrderItemProvider>
+                  <SupplierProvider>{children}</SupplierProvider>
+                </OrderItemProvider>
+              </OrderProvider>
             </ProductProvider>
           </WarehouseProvider>
         </AuthProvider>

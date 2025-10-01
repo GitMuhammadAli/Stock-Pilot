@@ -1,4 +1,3 @@
-// app/api/order-item/route.ts
 import { withAuth } from "@/lib/middleware/withAuth";
 import { orderItemService } from "@/lib/services/orderItemServices"; // Import the singleton instance
 import { NextRequest, NextResponse } from "next/server";

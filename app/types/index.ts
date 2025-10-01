@@ -383,10 +383,26 @@ getAllProductsForWarehouse: (warehouseId: string) => Promise<Product[] | null>;
 // src/types/index.ts (additions)
 
 // Order Status Enum (must match your backend's enum)
-export type OrderStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED';
+export type OrderStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED' | 'SHIPPED';
 
 // Order Interface
 export interface Order {
+    priority: string;
+    isRushOrder: boolean;
+    internalNotes: string;
+    notes: string;
+    referenceNumber: string;
+    deliveredDate: any;
+    shippedDate: any;
+    dueDate: any;
+    orderDate: any;
+    type:string
+    supplierName: any;
+    warehouseName: any;
+    itemCount: ReactNode;
+    customer: any;
+    totalAmount: number;
+    paymentStatus:string
     id: string;
     orderNumber: string; // Must be unique
     status: OrderStatus;
@@ -415,6 +431,8 @@ export interface UpdateOrderData {
     status?: OrderStatus;
     supplierId?: string;
     warehouseId?: string;
+    orderDate?:string
+    
 }
 
 // Interface for the value exposed by the OrderContext
