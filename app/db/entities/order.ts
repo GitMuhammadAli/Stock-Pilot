@@ -51,25 +51,7 @@ import { BaseEntity } from "./../base/baseEntity";
 import { Supplier } from "./supplier";
 import { WareHouse } from "./wareHouse";
 import { User } from "./User";
-
-
-export enum OrderStatus {
-    DRAFT = "draft",
-    PENDING = "pending",
-    CONFIRMED = "confirmed",
-    PROCESSING = "processing",
-    SHIPPED = "shipped",
-    DELIVERED = "delivered",
-    CANCELLED = "cancelled",
-    REFUNDED = "refunded"
-}
-
-export enum OrderType {
-    PURCHASE = "purchase", // Buying from supplier
-    SALES = "sales", // Selling to customer
-    TRANSFER = "transfer", // Internal transfer
-    ADJUSTMENT = "adjustment" // Inventory adjustment
-}
+import { OrderStatus , OrderType } from "@/types";
 
 export enum PaymentStatus {
     PENDING = "pending",

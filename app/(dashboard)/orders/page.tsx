@@ -47,15 +47,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useOrder } from "@/providers/orderProvider";
-
-// --- Types ---
-export type OrderStatus =
-  | "PENDING"
-  | "PROCESSING"
-  | "COMPLETED"
-  | "CANCELLED"
-  | "SHIPPED";
-
+import { OrderStatus } from "@/types";
 // --- Status styling ---
 const statusColors: Record<OrderStatus, string> = {
   PENDING: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -147,11 +139,11 @@ export default function OrderListPage() {
 
   const stats = useMemo(
     () => ({
-      PENDING: orders.filter((o) => o.status === "PENDING").length,
-      PROCESSING: orders.filter((o) => o.status === "PROCESSING").length,
-      COMPLETED: orders.filter((o) => o.status === "COMPLETED").length,
-      CANCELLED: orders.filter((o) => o.status === "CANCELLED").length,
-      SHIPPED: orders.filter((o) => o.status === "SHIPPED").length,
+      PENDING: orders.filter((o) => o.status === "pending").length,
+      PROCESSING: orders.filter((o) => o.status === "processing").length,
+      COMPLETED: orders.filter((o) => o.status === "completed").length,
+      CANCELLED: orders.filter((o) => o.status === "cancelled").length,
+      SHIPPED: orders.filter((o) => o.status === "shipped").length,
       TOTAL_VALUE: orders.reduce((sum, o) => sum + o.totalAmount, 0),
     }),
     [orders]

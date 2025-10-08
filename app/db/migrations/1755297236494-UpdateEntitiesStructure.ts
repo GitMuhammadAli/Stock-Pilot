@@ -38,7 +38,7 @@ export class UpdateEntitiesStructure1755297236494 implements MigrationInterface 
         await queryRunner.query(`CREATE INDEX "IDX_5b5720d9645cee7396595a16c9" ON "suppliers" ("name") `);
         await queryRunner.query(`CREATE INDEX "IDX_1a20bad173f7b192972dffac61" ON "suppliers" ("tier") `);
         await queryRunner.query(`CREATE INDEX "IDX_00d459497429b7681a09308029" ON "suppliers" ("status") `);
-        await queryRunner.query(`CREATE TYPE "public"."orders_status_enum" AS ENUM('draft', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded')`);
+        await queryRunner.query(`CREATE TYPE "public"."orders_status_enum" AS ENUM('draft', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded' , 'completed')`);
         await queryRunner.query(`CREATE TYPE "public"."orders_type_enum" AS ENUM('purchase', 'sales', 'transfer', 'adjustment')`);
         await queryRunner.query(`CREATE TYPE "public"."orders_paymentstatus_enum" AS ENUM('pending', 'paid', 'partial', 'overdue', 'refunded')`);
         await queryRunner.query(`CREATE TYPE "public"."orders_priority_enum" AS ENUM('low', 'normal', 'high', 'urgent')`);

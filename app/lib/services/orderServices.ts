@@ -1,26 +1,17 @@
-import { Order, OrderStatus } from "@/db/entities/order";
+import { Order } from "@/db/entities/order";
 import { AppDataSource } from "@/db/data-source";
 import { Repository } from "typeorm";
 import { User } from "@/db/entities/User";
 import { Supplier } from "@/db/entities/supplier";
 import { WareHouse } from "@/db/entities/wareHouse";
-
-// Interface for creating a new order
-interface CreateOrderData {
-  orderNumber: string;
-  status?: OrderStatus; 
-  supplierId: string;
-  warehouseId: string;
-  createdById: string;
-}
-
-// Interface for updating an existing order
-interface UpdateOrderData {
-  orderNumber?: string;
-  status?: OrderStatus;
-  supplierId?: string; 
-  warehouseId?: string;
-}
+import {
+  CreateOrderData,
+  OrderStatus,
+  OrderType,
+  PaymentStatus,
+  Priority,
+  UpdateOrderData,
+} from "@/types";
 
 // Standardized response interface for service methods
 interface OrderResponse {
@@ -39,7 +30,9 @@ export class OrderService {
   constructor() {
     // Ensure AppDataSource is initialized before getting repositories
     if (!AppDataSource.isInitialized) {
-      console.warn("AppDataSource is not initialized. Ensure connectDB() is called before using OrderService.");
+      console.warn(
+        "AppDataSource is not initialized. Ensure connectDB() is called before using OrderService."
+      );
       // In a real application, you might want to throw an error here or handle this more robustly.
     }
     this.orderRepo = AppDataSource.getRepository(Order);
@@ -55,8 +48,21 @@ export class OrderService {
    */
   async createOrder(data: CreateOrderData): Promise<OrderResponse> {
     try {
-      // Validate and fetch related entities
-      const user = await this.userRepo.findOne({ where: { id: data.createdById } });
+      console.log("order data", data);
+
+      // Generate a unique order number if not provided or if it's a duplicate
+      let orderNumber = data.orderNumber;
+      if (
+        !orderNumber ||
+        (await this.orderRepo.findOne({ where: { orderNumber } }))
+      ) {
+        orderNumber = await this.generateUniqueOrderNumber();
+      }
+
+      const user = await this.userRepo.findOne({
+        where: { id: data.createdById },
+      });
+
       if (!user) {
         return {
           success: false,
@@ -64,7 +70,9 @@ export class OrderService {
         };
       }
 
-      const supplier = await this.supplierRepo.findOne({ where: { id: data.supplierId } });
+      const supplier = await this.supplierRepo.findOne({
+        where: { id: data.supplierId },
+      });
       if (!supplier) {
         return {
           success: false,
@@ -72,7 +80,9 @@ export class OrderService {
         };
       }
 
-      const warehouse = await this.warehouseRepo.findOne({ where: { id: data.warehouseId } });
+      const warehouse = await this.warehouseRepo.findOne({
+        where: { id: data.warehouseId },
+      });
       if (!warehouse) {
         return {
           success: false,
@@ -80,17 +90,45 @@ export class OrderService {
         };
       }
 
-      // Create a new order instance
-      const order = this.orderRepo.create({
-        orderNumber: data.orderNumber,
-        status: data.status || OrderStatus.PENDING, // Use provided status or default
+      // Helper function to validate priority
+      const getValidPriority = (
+        priority: string
+      ): "low" | "normal" | "high" | "urgent" => {
+        const normalized = priority.toLowerCase();
+        switch (normalized) {
+          case "low":
+          case "normal":
+          case "high":
+          case "urgent":
+            return normalized;
+          default:
+            return "normal";
+        }
+      };
+
+      const orderData: Partial<Order> = {
+        orderNumber: orderNumber,
+        status: data.status,
+        paymentStatus: data.paymentStatus,
+        type: data.type,
+        priority: getValidPriority(data.priority || "normal"),
+        subtotal: data.subtotal || 0,
+        taxAmount: data.taxAmount || 0,
+        shippingCost: data.shippingCost || 0,
+        discountAmount: data.discountAmount || 0,
+        totalAmount: data.totalAmount || 0,
+        referenceNumber: data.referenceNumber,
+        dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+        notes: data.notes,
         supplier: supplier,
-        supplierId: data.supplierId, // Explicitly set foreign key
+        supplierId: data.supplierId,
         warehouse: warehouse,
-        warehouseId: data.warehouseId, // Explicitly set foreign key
+        warehouseId: data.warehouseId,
         createdBy: user,
-        createdById: data.createdById, // Explicitly set foreign key
-      });
+        createdById: data.createdById,
+      };
+
+      const order = this.orderRepo.create(orderData);
 
       // Save the new order to the database
       await this.orderRepo.save(order);
@@ -105,11 +143,34 @@ export class OrderService {
       return {
         success: false,
         message: "An error occurred while creating the order.",
-        error: error,
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
+  private async generateUniqueOrderNumber(): Promise<string> {
+    const prefix = "ORD";
+    const timestamp = Date.now().toString().slice(-6);
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    let orderNumber = `${prefix}-${timestamp}-${random}`;
+    let counter = 0;
+
+    // Ensure uniqueness (max 5 attempts to avoid infinite loop)
+    while (
+      (await this.orderRepo.findOne({ where: { orderNumber } })) &&
+      counter < 5
+    ) {
+      const newRandom = Math.random()
+        .toString(36)
+        .substring(2, 8)
+        .toUpperCase();
+      orderNumber = `${prefix}-${timestamp}-${newRandom}`;
+      counter++;
+    }
+
+    return orderNumber;
+  }
   /**
    * Retrieves all orders from the database.
    * @returns An OrderResponse containing a list of all orders.
@@ -118,7 +179,7 @@ export class OrderService {
     try {
       // Find all orders and eager load related entities
       const orders = await this.orderRepo.find({
-        relations: ['createdBy', 'supplier', 'warehouse'],
+        relations: ["createdBy", "supplier", "warehouse"],
         order: { createdAt: "DESC" },
       });
 
@@ -148,7 +209,7 @@ export class OrderService {
       // Find one order by ID and eager load related entities
       const order = await this.orderRepo.findOne({
         where: { id },
-        relations: ['createdBy', 'supplier', 'warehouse'],
+        relations: ["createdBy", "supplier", "warehouse"],
       });
 
       if (!order) {
@@ -193,7 +254,9 @@ export class OrderService {
 
       // Handle updates to related entities (supplier and warehouse)
       if (data.supplierId) {
-        const supplier = await this.supplierRepo.findOne({ where: { id: data.supplierId } });
+        const supplier = await this.supplierRepo.findOne({
+          where: { id: data.supplierId },
+        });
         if (!supplier) {
           return {
             success: false,
@@ -205,7 +268,9 @@ export class OrderService {
       }
 
       if (data.warehouseId) {
-        const warehouse = await this.warehouseRepo.findOne({ where: { id: data.warehouseId } });
+        const warehouse = await this.warehouseRepo.findOne({
+          where: { id: data.warehouseId },
+        });
         if (!warehouse) {
           return {
             success: false,
@@ -279,7 +344,7 @@ export class OrderService {
     try {
       const orders = await this.orderRepo.find({
         where: { createdBy: { id: userId } },
-        relations: ['createdBy', 'supplier', 'warehouse'],
+        relations: ["createdBy", "supplier", "warehouse"],
         order: { createdAt: "DESC" },
       });
 
@@ -307,7 +372,7 @@ export class OrderService {
     try {
       const orders = await this.orderRepo.find({
         where: { supplier: { id: supplierId } },
-        relations: ['createdBy', 'supplier', 'warehouse'],
+        relations: ["createdBy", "supplier", "warehouse"],
         order: { createdAt: "DESC" },
       });
 
@@ -317,7 +382,10 @@ export class OrderService {
         data: orders,
       };
     } catch (error) {
-      console.error(`Error retrieving orders for supplier ID ${supplierId}:`, error);
+      console.error(
+        `Error retrieving orders for supplier ID ${supplierId}:`,
+        error
+      );
       return {
         success: false,
         message: "An error occurred while retrieving supplier orders.",
@@ -335,7 +403,7 @@ export class OrderService {
     try {
       const orders = await this.orderRepo.find({
         where: { warehouse: { id: warehouseId } },
-        relations: ['createdBy', 'supplier', 'warehouse'],
+        relations: ["createdBy", "supplier", "warehouse"],
         order: { createdAt: "DESC" },
       });
 
@@ -345,7 +413,10 @@ export class OrderService {
         data: orders,
       };
     } catch (error) {
-      console.error(`Error retrieving orders for warehouse ID ${warehouseId}:`, error);
+      console.error(
+        `Error retrieving orders for warehouse ID ${warehouseId}:`,
+        error
+      );
       return {
         success: false,
         message: "An error occurred while retrieving warehouse orders.",
@@ -360,7 +431,10 @@ export class OrderService {
    * @param status - The new order status.
    * @returns An OrderResponse indicating success or failure, with the updated order data.
    */
-  async updateOrderStatus(id: string, status: OrderStatus): Promise<OrderResponse> {
+  async updateOrderStatus(
+    id: string,
+    status: OrderStatus
+  ): Promise<OrderResponse> {
     try {
       const order = await this.orderRepo.findOne({ where: { id } });
 
@@ -398,7 +472,7 @@ export class OrderService {
     try {
       const orders = await this.orderRepo.find({
         where: { status },
-        relations: ['createdBy', 'supplier', 'warehouse'],
+        relations: ["createdBy", "supplier", "warehouse"],
         order: { createdAt: "DESC" },
       });
 

@@ -200,7 +200,7 @@ export function OrderProvider({ children }: OrderProviderProps) {
             const result: { success: boolean; data?: Order; message?: string } = await response.json();
 
             if (result.success && result.data) {
-                setOrders(prev => [...prev, result.data!]); // Add new order to state
+                setOrders(prev => [...prev, result.data!]); 
                 return true;
             } else {
                 setError(result.message || 'Failed to create order');
