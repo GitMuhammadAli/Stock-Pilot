@@ -18,10 +18,7 @@ async function handler(req: NextRequest, _context: any, user: any) {
       const body = await req.json();
       console.log("Create Order Request Body:", body);
 
-      const response = await orderService.createOrder({
-        createdById: userId, // Pass the authenticated user's ID
-        ...body,
-      });
+     const response = await orderService.createOrder(userId, body);
 
       if (response.success) {
         return NextResponse.json({ success: true, data: response.data }, { status: 201 });

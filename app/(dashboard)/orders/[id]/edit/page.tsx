@@ -22,6 +22,113 @@ import { useToast } from "@/hooks/use-toast";
 import { useOrder } from "@/providers/orderProvider";
 import { useSupplier } from "@/providers/supplierProvider";
 import { useWarehouse } from "@/providers/wareHouseProvider";
+import { 
+  Order, 
+  OrderStatus, 
+  OrderType, 
+  PaymentStatus, 
+  Priority, 
+  UpdateOrderData 
+} from "@/types";
+
+// Helper functions to convert API string values to enum types
+const convertToOrderStatus = (status: string): OrderStatus => {
+  const statusMap: Record<string, OrderStatus> = {
+    'draft': OrderStatus.DRAFT,
+    'pending': OrderStatus.PENDING,
+    'confirmed': OrderStatus.CONFIRMED,
+    'processing': OrderStatus.PROCESSING,
+    'shipped': OrderStatus.SHIPPED,
+    'delivered': OrderStatus.DELIVERED,
+    'completed': OrderStatus.COMPLETED,
+    'cancelled': OrderStatus.CANCELLED,
+    'refunded': OrderStatus.REFUNDED,
+  };
+  return statusMap[status.toLowerCase()] || OrderStatus.DRAFT;
+};
+
+const convertToOrderType = (type: string): OrderType => {
+  const typeMap: Record<string, OrderType> = {
+    'purchase': OrderType.PURCHASE,
+    'sales': OrderType.SALES,
+    'transfer': OrderType.TRANSFER,
+    'adjustment': OrderType.ADJUSTMENT,
+    'return': OrderType.RETURN,
+  };
+  return typeMap[type.toLowerCase()] || OrderType.PURCHASE;
+};
+
+const convertToPaymentStatus = (status: string): PaymentStatus => {
+  const statusMap: Record<string, PaymentStatus> = {
+    'pending': PaymentStatus.PENDING,
+    'paid': PaymentStatus.PAID,
+    'partial': PaymentStatus.PARTIAL,
+    'overdue': PaymentStatus.OVERDUE,
+    'refunded': PaymentStatus.REFUNDED,
+  };
+  return statusMap[status.toLowerCase()] || PaymentStatus.PENDING;
+};
+
+const convertToPriority = (priority: string): Priority => {
+  const priorityMap: Record<string, Priority> = {
+    'low': 'low',
+    'normal': 'normal',
+    'high': 'high',
+    'urgent': 'urgent',
+  };
+  return priorityMap[priority.toLowerCase()] || 'normal';
+};
+
+// Helper function to format date for input fields
+const formatDateForInput = (dateString: string | null): string => {
+  if (!dateString) return "";
+  try {
+    return new Date(dateString).toISOString().split('T')[0];
+  } catch {
+    return "";
+  }
+};
+
+// Helper function to safely convert to number (handles both string and number inputs)
+const safeToNumber = (value: string | number | null | undefined): number => {
+  if (value === null || value === undefined) return 0;
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  return 0;
+};
+
+// Create a form data interface that extends UpdateOrderData for form state
+interface OrderFormData extends Omit<UpdateOrderData, 'status' | 'type' | 'paymentStatus'> {
+  orderNumber: string;
+  status: OrderStatus;
+  type: OrderType;
+  paymentStatus: PaymentStatus;
+  orderDate: string;
+  dueDate: string;
+  shippedDate: string;
+  deliveredDate: string;
+  supplierId: string;
+  warehouseId: string;
+  referenceNumber: string;
+  purchaseOrderNumber: string;
+  notes: string;
+  internalNotes: string;
+  priority: Priority;
+  isRushOrder: boolean;
+  subtotal: number;
+  taxAmount: number;
+  shippingCost: number;
+  discountAmount: number;
+  totalAmount: number;
+  paidAmount: number;
+  shippingAddress: string;
+  billingAddress: string;
+  trackingNumber: string;
+  shippingCarrier: string;
+}
 
 export default function EditOrderPage() {
   const { id } = useParams();
@@ -34,11 +141,11 @@ export default function EditOrderPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<OrderFormData>({
     orderNumber: "",
-    status: "pending",
-    type: "purchase",
-    paymentStatus: "pending",
+    status: OrderStatus.DRAFT,
+    type: OrderType.PURCHASE,
+    paymentStatus: PaymentStatus.PENDING,
     orderDate: "",
     dueDate: "",
     shippedDate: "",
@@ -46,10 +153,21 @@ export default function EditOrderPage() {
     supplierId: "",
     warehouseId: "",
     referenceNumber: "",
+    purchaseOrderNumber: "",
     notes: "",
     internalNotes: "",
     priority: "normal",
     isRushOrder: false,
+    subtotal: 0,
+    taxAmount: 0,
+    shippingCost: 0,
+    discountAmount: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    shippingAddress: "",
+    billingAddress: "",
+    trackingNumber: "",
+    shippingCarrier: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -67,20 +185,31 @@ export default function EditOrderPage() {
         if (order) {
           setFormData({
             orderNumber: order.orderNumber || "",
-            status: order.status || "pending",
-            type: order.type || "purchase",
-            paymentStatus: order.paymentStatus || "pending",
-            orderDate: order.orderDate?.substring(0, 10) || "",
-            dueDate: order.dueDate?.substring(0, 10) || "",
-            shippedDate: order.shippedDate?.substring(0, 10) || "",
-            deliveredDate: order.deliveredDate?.substring(0, 10) || "",
+            status: convertToOrderStatus(order.status || "pending"),
+            type: convertToOrderType(order.type || "purchase"),
+            paymentStatus: convertToPaymentStatus(order.paymentStatus || "pending"),
+            orderDate: formatDateForInput(order.orderDate),
+            dueDate: formatDateForInput(order.dueDate),
+            shippedDate: formatDateForInput(order.shippedDate),
+            deliveredDate: formatDateForInput(order.deliveredDate),
             supplierId: order.supplierId || "",
             warehouseId: order.warehouseId || "",
             referenceNumber: order.referenceNumber || "",
+            purchaseOrderNumber: order.purchaseOrderNumber || "",
             notes: order.notes || "",
             internalNotes: order.internalNotes || "",
-            priority: order.priority || "normal",
+            priority: convertToPriority(order.priority || "normal"),
             isRushOrder: order.isRushOrder || false,
+            subtotal: safeToNumber(order.subtotal),
+            taxAmount: safeToNumber(order.taxAmount),
+            shippingCost: safeToNumber(order.shippingCost),
+            discountAmount: safeToNumber(order.discountAmount),
+            totalAmount: safeToNumber(order.totalAmount),
+            paidAmount: safeToNumber(order.paidAmount),
+            shippingAddress: order.shippingAddress || "",
+            billingAddress: order.billingAddress || "",
+            trackingNumber: order.trackingNumber || "",
+            shippingCarrier: order.shippingCarrier || "",
           });
         }
       } catch (err) {
@@ -96,7 +225,33 @@ export default function EditOrderPage() {
     loadData();
   }, [id, getOrder, getAllSuppliers, getAllWarehouses, toast]);
 
-  const handleInputChange = (field: string, value: any) => {
+  // Generic handler for all input types
+  const handleInputChange = (field: keyof OrderFormData, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  // Specific handler for numeric fields
+  const handleNumericChange = (field: keyof OrderFormData, value: string) => {
+    const numericValue = value === "" ? 0 : parseFloat(value) || 0;
+    setFormData((prev) => ({ ...prev, [field]: numericValue }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  // Specific handler for string fields
+  const handleStringChange = (field: keyof OrderFormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  // Specific handler for boolean fields
+  const handleBooleanChange = (field: keyof OrderFormData, value: boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
@@ -105,11 +260,9 @@ export default function EditOrderPage() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.orderNumber.trim()) newErrors.orderNumber = "Order number is required";
     if (!formData.status) newErrors.status = "Status is required";
     if (!formData.type) newErrors.type = "Order type is required";
     if (!formData.supplierId) newErrors.supplierId = "Supplier is required";
-    if (!formData.warehouseId) newErrors.warehouseId = "Warehouse is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -122,20 +275,46 @@ export default function EditOrderPage() {
     setIsSubmitting(true);
 
     try {
-      await updateOrder(id as string, {
-        ...formData,
+      // Convert form data to UpdateOrderData (making optional fields nullable where needed)
+      const updateData: UpdateOrderData = {
+        status: formData.status,
+        type: formData.type,
+        paymentStatus: formData.paymentStatus,
+        supplierId: formData.supplierId,
+        warehouseId: formData.warehouseId || null,
         orderDate: formData.orderDate || null,
         dueDate: formData.dueDate || null,
         shippedDate: formData.shippedDate || null,
         deliveredDate: formData.deliveredDate || null,
-      });
+        referenceNumber: formData.referenceNumber || undefined,
+        purchaseOrderNumber: formData.purchaseOrderNumber || undefined,
+        notes: formData.notes || undefined,
+        internalNotes: formData.internalNotes || undefined,
+        priority: formData.priority,
+        isRushOrder: formData.isRushOrder,
+        subtotal: formData.subtotal,
+        taxAmount: formData.taxAmount,
+        shippingCost: formData.shippingCost,
+        discountAmount: formData.discountAmount,
+        totalAmount: formData.totalAmount,
+        paidAmount: formData.paidAmount,
+        shippingAddress: formData.shippingAddress || undefined,
+        billingAddress: formData.billingAddress || undefined,
+        trackingNumber: formData.trackingNumber || undefined,
+        shippingCarrier: formData.shippingCarrier || undefined,
+      };
 
-      toast({
-        title: "Order updated!",
-        description: `Order ${formData.orderNumber} has been successfully updated.`,
-      });
+      const success = await updateOrder(id as string, updateData);
 
-      router.push(`/orders/${id}`);
+      if (success) {
+        toast({
+          title: "Order updated!",
+          description: `Order ${formData.orderNumber} has been successfully updated.`,
+        });
+        router.push(`/orders/${id}`);
+      } else {
+        throw new Error("Failed to update order");
+      }
     } catch (err) {
       toast({
         title: "Error updating order",
@@ -183,19 +362,21 @@ export default function EditOrderPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Order Number + Reference */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InputGroup
-                  label="Order Number"
-                  field="orderNumber"
-                  required
-                  value={formData.orderNumber}
-                  onChange={handleInputChange}
-                  errors={errors}
-                />
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Order Number</Label>
+                  <Input
+                    value={formData.orderNumber}
+                    readOnly
+                    disabled
+                    className="bg-[#2C3444] border-none text-gray-400 cursor-not-allowed"
+                  />
+                  <p className="text-sm text-gray-500">Order number cannot be changed</p>
+                </div>
                 <InputGroup
                   label="Reference Number"
                   field="referenceNumber"
                   value={formData.referenceNumber}
-                  onChange={handleInputChange}
+                  onChange={handleStringChange}
                   errors={errors}
                 />
               </div>
@@ -206,7 +387,7 @@ export default function EditOrderPage() {
                   label="Status"
                   field="status"
                   value={formData.status}
-                  options={["pending", "processing", "completed", "cancelled"]}
+                  options={Object.values(OrderStatus)}
                   onChange={handleInputChange}
                   errors={errors}
                 />
@@ -214,7 +395,7 @@ export default function EditOrderPage() {
                   label="Order Type"
                   field="type"
                   value={formData.type}
-                  options={["purchase", "sales", "return"]}
+                  options={Object.values(OrderType)}
                   onChange={handleInputChange}
                   errors={errors}
                 />
@@ -222,7 +403,7 @@ export default function EditOrderPage() {
                   label="Payment Status"
                   field="paymentStatus"
                   value={formData.paymentStatus}
-                  options={["pending", "paid", "failed"]}
+                  options={Object.values(PaymentStatus)}
                   onChange={handleInputChange}
                   errors={errors}
                 />
@@ -235,7 +416,7 @@ export default function EditOrderPage() {
                   field="orderDate"
                   type="date"
                   value={formData.orderDate}
-                  onChange={handleInputChange}
+                  onChange={handleStringChange}
                   errors={errors}
                 />
                 <InputGroup
@@ -243,7 +424,7 @@ export default function EditOrderPage() {
                   field="dueDate"
                   type="date"
                   value={formData.dueDate}
-                  onChange={handleInputChange}
+                  onChange={handleStringChange}
                   errors={errors}
                 />
                 <InputGroup
@@ -251,7 +432,7 @@ export default function EditOrderPage() {
                   field="shippedDate"
                   type="date"
                   value={formData.shippedDate}
-                  onChange={handleInputChange}
+                  onChange={handleStringChange}
                   errors={errors}
                 />
                 <InputGroup
@@ -259,7 +440,7 @@ export default function EditOrderPage() {
                   field="deliveredDate"
                   type="date"
                   value={formData.deliveredDate}
-                  onChange={handleInputChange}
+                  onChange={handleStringChange}
                   errors={errors}
                 />
               </div>
@@ -271,7 +452,7 @@ export default function EditOrderPage() {
                   field="supplierId"
                   value={formData.supplierId}
                   options={suppliers}
-                  onChange={handleInputChange}
+                  onChange={handleStringChange}
                   errors={errors}
                   isObject
                 />
@@ -280,35 +461,116 @@ export default function EditOrderPage() {
                   field="warehouseId"
                   value={formData.warehouseId}
                   options={warehouses}
-                  onChange={handleInputChange}
+                  onChange={handleStringChange}
                   errors={errors}
                   isObject
                 />
               </div>
 
-              {/* Notes */}
-              <div className="space-y-2">
-                <Label htmlFor="notes" className="text-gray-300">
-                  Notes
-                </Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => handleInputChange("notes", e.target.value)}
-                  className="bg-[#2C3444] border-none text-white min-h-[80px]"
+              {/* Financial Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <NumericInputGroup
+                  label="Subtotal"
+                  field="subtotal"
+                  value={formData.subtotal}
+                  onChange={handleNumericChange}
+                  errors={errors}
+                />
+                <NumericInputGroup
+                  label="Tax Amount"
+                  field="taxAmount"
+                  value={formData.taxAmount}
+                  onChange={handleNumericChange}
+                  errors={errors}
+                />
+                <NumericInputGroup
+                  label="Shipping Cost"
+                  field="shippingCost"
+                  value={formData.shippingCost}
+                  onChange={handleNumericChange}
+                  errors={errors}
+                />
+                <NumericInputGroup
+                  label="Discount Amount"
+                  field="discountAmount"
+                  value={formData.discountAmount}
+                  onChange={handleNumericChange}
+                  errors={errors}
+                />
+                <NumericInputGroup
+                  label="Total Amount"
+                  field="totalAmount"
+                  value={formData.totalAmount}
+                  onChange={handleNumericChange}
+                  errors={errors}
+                />
+                <NumericInputGroup
+                  label="Paid Amount"
+                  field="paidAmount"
+                  value={formData.paidAmount}
+                  onChange={handleNumericChange}
+                  errors={errors}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="internalNotes" className="text-gray-300">
-                  Internal Notes
-                </Label>
-                <Textarea
-                  id="internalNotes"
+
+              {/* Shipping Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <InputGroup
+                  label="Purchase Order Number"
+                  field="purchaseOrderNumber"
+                  value={formData.purchaseOrderNumber}
+                  onChange={handleStringChange}
+                  errors={errors}
+                />
+                <InputGroup
+                  label="Tracking Number"
+                  field="trackingNumber"
+                  value={formData.trackingNumber}
+                  onChange={handleStringChange}
+                  errors={errors}
+                />
+                <InputGroup
+                  label="Shipping Carrier"
+                  field="shippingCarrier"
+                  value={formData.shippingCarrier}
+                  onChange={handleStringChange}
+                  errors={errors}
+                />
+              </div>
+
+              {/* Address Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <TextareaGroup
+                  label="Shipping Address"
+                  field="shippingAddress"
+                  value={formData.shippingAddress}
+                  onChange={handleStringChange}
+                  errors={errors}
+                />
+                <TextareaGroup
+                  label="Billing Address"
+                  field="billingAddress"
+                  value={formData.billingAddress}
+                  onChange={handleStringChange}
+                  errors={errors}
+                />
+              </div>
+
+              {/* Notes */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <TextareaGroup
+                  label="Notes"
+                  field="notes"
+                  value={formData.notes}
+                  onChange={handleStringChange}
+                  errors={errors}
+                />
+                <TextareaGroup
+                  label="Internal Notes"
+                  field="internalNotes"
                   value={formData.internalNotes}
-                  onChange={(e) =>
-                    handleInputChange("internalNotes", e.target.value)
-                  }
-                  className="bg-[#2C3444] border-none text-white min-h-[80px]"
+                  onChange={handleStringChange}
+                  errors={errors}
                 />
               </div>
 
@@ -318,8 +580,8 @@ export default function EditOrderPage() {
                   label="Priority"
                   field="priority"
                   value={formData.priority}
-                  options={["low", "normal", "high"]}
-                  onChange={handleInputChange}
+                  options={["low", "normal", "high", "urgent"]}
+                  onChange={handleStringChange}
                   errors={errors}
                 />
                 <div className="flex items-center space-x-2 pt-6">
@@ -327,7 +589,7 @@ export default function EditOrderPage() {
                     type="checkbox"
                     checked={formData.isRushOrder}
                     onChange={(e) =>
-                      handleInputChange("isRushOrder", e.target.checked)
+                      handleBooleanChange("isRushOrder", e.target.checked)
                     }
                     className="w-4 h-4"
                   />
@@ -382,6 +644,36 @@ function InputGroup({ label, field, type = "text", value, onChange, errors }: an
   );
 }
 
+function NumericInputGroup({ label, field, value, onChange, errors }: any) {
+  return (
+    <div className="space-y-2">
+      <Label className="text-gray-300">{label}</Label>
+      <Input
+        type="number"
+        step="0.01"
+        value={value}
+        onChange={(e) => onChange(field, e.target.value)}
+        className="bg-[#2C3444] border-none text-white"
+      />
+      {errors[field] && <p className="text-red-500 text-sm">{errors[field]}</p>}
+    </div>
+  );
+}
+
+function TextareaGroup({ label, field, value, onChange, errors }: any) {
+  return (
+    <div className="space-y-2">
+      <Label className="text-gray-300">{label}</Label>
+      <Textarea
+        value={value}
+        onChange={(e) => onChange(field, e.target.value)}
+        className="bg-[#2C3444] border-none text-white min-h-[80px]"
+      />
+      {errors[field] && <p className="text-red-500 text-sm">{errors[field]}</p>}
+    </div>
+  );
+}
+
 function SelectGroup({
   label,
   field,
@@ -407,7 +699,7 @@ function SelectGroup({
               ))
             : options?.map((opt: string) => (
                 <SelectItem key={opt} value={opt}>
-                  {opt}
+                  {opt.charAt(0).toUpperCase() + opt.slice(1)}
                 </SelectItem>
               ))}
         </SelectContent>

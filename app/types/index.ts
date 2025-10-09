@@ -379,6 +379,19 @@ export interface ProductContextType {
 
 // Order Interface
 export interface Order {
+  purchaseOrderNumber: string;
+  subtotal: number;
+  taxAmount: number;
+  shippingCost: number;
+  discountAmount: number;
+  shippingAddress: string;
+  billingAddress: string;
+  trackingNumber: string;
+  shippingCarrier: string;
+  __supplier__: any;
+  __warehouse__: any;
+  __createdBy__: any;
+  paidAmount:number;
   priority: string;
   isRushOrder: boolean;
   internalNotes: string;
@@ -443,8 +456,8 @@ export enum PaymentStatus {
 export type Priority = "low" | "normal" | "high" | "urgent";
 
 export interface CreateOrderData {
-  orderNumber: string;
-  createdById: string;
+  orderNumber?: string;
+  createdById?:string;
   status: OrderStatus;
   supplierId: string;
   warehouseId: string;
@@ -465,10 +478,32 @@ export interface CreateOrderData {
 export interface UpdateOrderData {
   orderNumber?: string;
   status: OrderStatus;
+  type: OrderType;
+  paymentStatus: PaymentStatus;
   supplierId?: string;
-  warehouseId?: string;
-  orderDate?: string;
+  warehouseId?: string | null;
+  orderDate?: string | null;
+  dueDate?: string | null;
+  shippedDate?: string | null;
+  deliveredDate?: string | null;
+  referenceNumber?: string;
+  purchaseOrderNumber?: string;
+  notes?: string;
+  internalNotes?: string;
+  priority?: Priority;
+  isRushOrder?: boolean;
+  subtotal?: number;
+  taxAmount?: number;
+  shippingCost?: number;
+  discountAmount?: number;
+  totalAmount?: number;
+  paidAmount?: number;
+  shippingAddress?: string;
+  billingAddress?: string;
+  trackingNumber?: string;
+  shippingCarrier?: string;
 }
+
 
 // Interface for the value exposed by the OrderContext
 export interface OrderContextType {
@@ -482,7 +517,7 @@ export interface OrderContextType {
   deleteOrder: (id: string) => Promise<boolean>;
   getOrder: (id: string) => Promise<Order | null>;
   getAllOrders: () => Promise<void>;
-  getAllOrdersForUser: (userId: string) => Promise<void>;
+  getAllOrdersForUser: () => Promise<void>;
   getAllOrdersForSupplier: (supplierId: string) => Promise<void>;
   getAllOrdersForWarehouse: (warehouseId: string) => Promise<void>;
   getAllOrdersByStatus: (status: OrderStatus) => Promise<void>;

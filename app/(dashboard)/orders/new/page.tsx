@@ -29,12 +29,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
-// Generate order number function
-const generateOrderNumber = (): string => {
-  const prefix = 'ORD';
-  const timestamp = Date.now().toString().slice(-6);
-  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-  return `${prefix}-${timestamp}-${random}`;
+const parseNumericInput = (value: string): number => {
+  if (value === '' || value === '0') return 0;
+  
+  // Remove leading zeros and parse
+  const cleanedValue = value.replace(/^0+/, '') || '0';
+  const numericValue = parseFloat(cleanedValue);
+  
+  return isNaN(numericValue) ? 0 : numericValue;
+};
+
+// Helper function to format numeric value for display
+const formatNumericDisplay = (value: number): string => {
+  return value === 0 ? '' : value.toString();
 };
 
 const CreateOrderPage = () => {
@@ -43,12 +50,7 @@ const CreateOrderPage = () => {
   const { suppliers, getAllSuppliers } = useSupplier();
   const { warehouses, getAllWarehouses } = useWarehouse();
 
-  // For now, use a temporary user ID - replace with your actual auth system
-  const tempUserId = "b97567c3-966a-4ab3-b550-c08a2f3e28d5";
-
   const [formData, setFormData] = useState<CreateOrderData>({
-    orderNumber: generateOrderNumber(),
-    createdById: tempUserId,
     supplierId: "",
     warehouseId: "",
     type: OrderType.PURCHASE,
@@ -65,13 +67,22 @@ const CreateOrderPage = () => {
     notes: "",
   });
 
+  // Display values for inputs (to handle empty state and formatting)
+  const [displayValues, setDisplayValues] = useState({
+    subtotal: '',
+    taxAmount: '',
+    shippingCost: '',
+    discountAmount: '',
+    totalAmount: '',
+  });
+
   // Fetch suppliers & warehouses on mount
   useEffect(() => {
     getAllSuppliers();
     getAllWarehouses();
   }, [getAllSuppliers, getAllWarehouses]);
 
-  // Auto-update total amount
+  // Auto-update total amount when financial fields change
   useEffect(() => {
     const { subtotal, taxAmount, shippingCost, discountAmount } = formData;
     const total =
@@ -79,7 +90,9 @@ const CreateOrderPage = () => {
       Number(taxAmount) +
       Number(shippingCost) -
       Number(discountAmount);
+    
     setFormData((prev) => ({ ...prev, totalAmount: total }));
+    setDisplayValues(prev => ({ ...prev, totalAmount: formatNumericDisplay(total) }));
   }, [
     formData.subtotal,
     formData.taxAmount,
@@ -87,38 +100,75 @@ const CreateOrderPage = () => {
     formData.discountAmount,
   ]);
 
-  const handleChange = (
+  const handleNumericChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    
+    // Parse the numeric value (remove leading zeros)
+    const numericValue = parseNumericInput(value);
+    
+    // Update form data with actual numeric value
+    setFormData((prev) => ({
+      ...prev,
+      [name]: numericValue,
+    }));
+
+    // Update display value (show empty string for 0, otherwise the cleaned value)
+    setDisplayValues(prev => ({
+      ...prev,
+      [name]: value === '' ? '' : value.replace(/^0+/, '') || ''
+    }));
+  };
+
+  const handleTextChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: e.target.type === "number" ? Number(value) || 0 : value,
+      [name]: value,
+    }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (
-      !formData.orderNumber ||
-      !formData.supplierId ||
-      !formData.warehouseId ||
-      !formData.createdById
-    ) {
+    // Validation
+    if (!formData.supplierId || !formData.warehouseId) {
       toast.error("Please fill in all required fields.");
       return;
     }
 
-    console.log("Submitting order data:", formData);
+    // Prepare data for submission - ensure all numeric values are properly formatted
+    const submitData: CreateOrderData = {
+      ...formData,
+      subtotal: Number(formData.subtotal) || 0,
+      taxAmount: Number(formData.taxAmount) || 0,
+      shippingCost: Number(formData.shippingCost) || 0,
+      discountAmount: Number(formData.discountAmount) || 0,
+      totalAmount: Number(formData.totalAmount) || 0,
+    };
 
-    const success = await createOrder(formData);
+    console.log("Submitting order data:", submitData);
 
-    if (success) {
-      toast.success("Order created successfully!");
-      router.push("/dashboard/orders");
-    } else {
-      toast.error("Failed to create order.");
+    try {
+      const success = await createOrder(submitData);
+
+      if (success) {
+        toast.success("Order created successfully!");
+        router.push("/orders");
+      } else {
+        toast.error("Failed to create order.");
+      }
+    } catch (error) {
+      console.error("Error creating order:", error);
+      toast.error("An error occurred while creating the order.");
     }
   };
 
@@ -136,23 +186,11 @@ const CreateOrderPage = () => {
             {/* ─── Basic Info ──────────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label>Order Number</Label>
-                <Input
-                  name="orderNumber"
-                  value={formData.orderNumber}
-                  onChange={handleChange}
-                  placeholder="ORD-00123"
-                  required
-                  className="bg-[#2C3444] border border-gray-600 text-gray-100"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Order Type</Label>
+                <Label>Order Type *</Label>
                 <Select
                   value={formData.type}
                   onValueChange={(v: OrderType) =>
-                    setFormData((p) => ({ ...p, type: v }))
+                    handleSelectChange("type", v)
                   }
                 >
                   <SelectTrigger className="bg-[#2C3444] border border-gray-600">
@@ -169,11 +207,11 @@ const CreateOrderPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Status</Label>
+                <Label>Status *</Label>
                 <Select
                   value={formData.status}
                   onValueChange={(v: OrderStatus) =>
-                    setFormData((p) => ({ ...p, status: v }))
+                    handleSelectChange("status", v)
                   }
                 >
                   <SelectTrigger className="bg-[#2C3444] border border-gray-600">
@@ -194,11 +232,11 @@ const CreateOrderPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Payment Status</Label>
+                <Label>Payment Status *</Label>
                 <Select
                   value={formData.paymentStatus}
                   onValueChange={(v: PaymentStatus) =>
-                    setFormData((p) => ({ ...p, paymentStatus: v }))
+                    handleSelectChange("paymentStatus", v)
                   }
                 >
                   <SelectTrigger className="bg-[#2C3444] border border-gray-600">
@@ -216,11 +254,11 @@ const CreateOrderPage = () => {
 
               {/* ─── Supplier Dropdown ──────────────────────────────── */}
               <div className="space-y-2">
-                <Label>Supplier</Label>
+                <Label>Supplier *</Label>
                 <Select
                   value={formData.supplierId}
                   onValueChange={(v) =>
-                    setFormData((p) => ({ ...p, supplierId: v }))
+                    handleSelectChange("supplierId", v)
                   }
                 >
                   <SelectTrigger className="bg-[#2C3444] border border-gray-600">
@@ -234,7 +272,9 @@ const CreateOrderPage = () => {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="">No suppliers found</SelectItem>
+                      <SelectItem value="no-suppliers" disabled>
+                        No suppliers found
+                      </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -242,11 +282,11 @@ const CreateOrderPage = () => {
 
               {/* ─── Warehouse Dropdown ──────────────────────────────── */}
               <div className="space-y-2">
-                <Label>Warehouse</Label>
+                <Label>Warehouse *</Label>
                 <Select
                   value={formData.warehouseId}
                   onValueChange={(v) =>
-                    setFormData((p) => ({ ...p, warehouseId: v }))
+                    handleSelectChange("warehouseId", v)
                   }
                 >
                   <SelectTrigger className="bg-[#2C3444] border border-gray-600">
@@ -260,7 +300,9 @@ const CreateOrderPage = () => {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="">No warehouses found</SelectItem>
+                      <SelectItem value="no-warehouses" disabled>
+                        No warehouses found
+                      </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -275,17 +317,19 @@ const CreateOrderPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
                   { label: "Subtotal", name: "subtotal" },
-                  { label: "Tax", name: "taxAmount" },
-                  { label: "Shipping", name: "shippingCost" },
-                  { label: "Discount", name: "discountAmount" },
+                  { label: "Tax Amount", name: "taxAmount" },
+                  { label: "Shipping Cost", name: "shippingCost" },
+                  { label: "Discount Amount", name: "discountAmount" },
                 ].map((field) => (
                   <div key={field.name} className="space-y-2">
                     <Label>{field.label}</Label>
                     <Input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       name={field.name}
-                      value={(formData as any)[field.name]}
-                      onChange={handleChange}
+                      value={displayValues[field.name as keyof typeof displayValues]}
+                      onChange={handleNumericChange}
+                      placeholder="0"
                       className="bg-[#2C3444] border border-gray-600 text-gray-100"
                     />
                   </div>
@@ -294,11 +338,12 @@ const CreateOrderPage = () => {
                 <div className="space-y-2">
                   <Label>Total Amount</Label>
                   <Input
-                    type="number"
+                    type="text"
                     name="totalAmount"
-                    value={formData.totalAmount}
+                    value={displayValues.totalAmount}
                     readOnly
-                    className="bg-[#2C3444] border border-gray-600 text-gray-100"
+                    placeholder="0"
+                    className="bg-[#2C3444] border border-gray-600 text-gray-100 bg-gray-700"
                   />
                 </div>
               </div>
@@ -311,7 +356,7 @@ const CreateOrderPage = () => {
                 <Select
                   value={formData.priority}
                   onValueChange={(v: Priority) =>
-                    setFormData((p) => ({ ...p, priority: v }))
+                    handleSelectChange("priority", v)
                   }
                 >
                   <SelectTrigger className="bg-[#2C3444] border border-gray-600">
@@ -331,7 +376,7 @@ const CreateOrderPage = () => {
                 <Input
                   name="referenceNumber"
                   value={formData.referenceNumber}
-                  onChange={handleChange}
+                  onChange={handleTextChange}
                   placeholder="REF-001"
                   className="bg-[#2C3444] border border-gray-600 text-gray-100"
                 />
@@ -343,7 +388,7 @@ const CreateOrderPage = () => {
                   type="date"
                   name="dueDate"
                   value={formData.dueDate}
-                  onChange={handleChange}
+                  onChange={handleTextChange}
                   className="bg-[#2C3444] border border-gray-600 text-gray-100"
                 />
               </div>
@@ -355,7 +400,7 @@ const CreateOrderPage = () => {
               <Textarea
                 name="notes"
                 value={formData.notes}
-                onChange={handleChange}
+                onChange={handleTextChange}
                 placeholder="Order notes or special instructions..."
                 rows={4}
                 className="bg-[#2C3444] border border-gray-600 text-gray-100"
@@ -363,8 +408,20 @@ const CreateOrderPage = () => {
             </div>
 
             {/* ─── Submit ──────────────────────────────── */}
-            <div className="flex justify-end">
-              <Button type="submit" disabled={loading}>
+            <div className="flex justify-end gap-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => router.back()}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={loading}
+                className="min-w-32"
+              >
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

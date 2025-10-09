@@ -17,6 +17,11 @@ import {
   XCircle,
   Truck,
   Loader2,
+  Building2,
+  Warehouse,
+  User,
+  Calendar,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,14 +52,27 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useOrder } from "@/providers/orderProvider";
-import { OrderStatus } from "@/types";
+import { OrderStatus, OrderType, PaymentStatus } from "@/types";
+
 // --- Status styling ---
-const statusColors: Record<OrderStatus, string> = {
-  PENDING: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  PROCESSING: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  COMPLETED: "bg-green-500/20 text-green-400 border-green-500/30",
-  CANCELLED: "bg-red-500/20 text-red-400 border-red-500/30",
-  SHIPPED: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+const statusColors: Record<string, string> = {
+  draft: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+  pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  confirmed: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  processing: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
+  shipped: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  delivered: "bg-green-500/20 text-green-400 border-green-500/30",
+  completed: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  cancelled: "bg-red-500/20 text-red-400 border-red-500/30",
+  refunded: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+};
+
+const paymentStatusColors: Record<string, string> = {
+  pending: "bg-yellow-500/20 text-yellow-400",
+  paid: "bg-green-500/20 text-green-400",
+  partial: "bg-blue-500/20 text-blue-400",
+  overdue: "bg-red-500/20 text-red-400",
+  refunded: "bg-orange-500/20 text-orange-400",
 };
 
 // --- StatusIcon Component ---
@@ -62,72 +80,125 @@ function StatusIcon({
   status,
   className,
 }: {
-  status: OrderStatus;
+  status: string;
   className?: string;
 }) {
   switch (status) {
-    case "PENDING":
+    case "pending":
       return <Clock className={className} />;
-    case "PROCESSING":
+    case "processing":
+    case "confirmed":
       return <Loader2 className={`${className} animate-spin`} />;
-    case "COMPLETED":
+    case "completed":
+    case "delivered":
       return <CheckCircle className={className} />;
-    case "CANCELLED":
+    case "cancelled":
       return <XCircle className={className} />;
-    case "SHIPPED":
+    case "shipped":
       return <Truck className={className} />;
+    case "draft":
+      return <Package className={className} />;
     default:
       return null;
   }
 }
 
+function OrderTypeIcon({
+  type,
+  className,
+}: {
+  type: string;
+  className?: string;
+}) {
+  switch (type) {
+    case "purchase":
+      return <Building2 className={className} />;
+    case "sales":
+      return <DollarSign className={className} />;
+    case "transfer":
+      return <Truck className={className} />;
+    case "adjustment":
+      return <Package className={className} />;
+    default:
+      return <Package className={className} />;
+  }
+}
+
 export default function OrderListPage() {
   const router = useRouter();
-  const { orders, loading, getAllOrders, updateOrder, deleteOrder } =
+  const { orders, loading, getAllOrdersForUser, updateOrder, deleteOrder } =
     useOrder();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | OrderStatus>("all");
-  const [sortBy, setSortBy] = useState<keyof (typeof orders)[0] | "createdAt">(
-    "createdAt"
-  );
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   useEffect(() => {
-    getAllOrders();
-  }, [getAllOrders]);
+    getAllOrdersForUser();
+  }, [getAllOrdersForUser]);
 
   // --- Derived: Filtered & Sorted Orders ---
   const filteredOrders = useMemo(() => {
     return orders
       .filter((order) => {
         const matchesSearch =
-          order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.warehouseName.toLowerCase().includes(searchTerm.toLowerCase());
+          order.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.__supplier__?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.__warehouse__?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.__createdBy__?.name?.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesStatus =
           statusFilter === "all" || order.status === statusFilter;
 
-        return matchesSearch && matchesStatus;
+        const matchesType =
+          typeFilter === "all" || order.type === typeFilter;
+
+        return matchesSearch && matchesStatus && matchesType;
       })
       .sort((a, b) => {
-        const aValue = a[sortBy as keyof typeof a];
-        const bValue = b[sortBy as keyof typeof b];
+        let aValue: any = a[sortBy as keyof typeof a];
+        let bValue: any = b[sortBy as keyof typeof b];
+
+        // Handle nested properties
+        if (sortBy === "supplier") {
+          aValue = a.__supplier__?.name;
+          bValue = b.__supplier__?.name;
+        } else if (sortBy === "warehouse") {
+          aValue = a.__warehouse__?.name;
+          bValue = b.__warehouse__?.name;
+        } else if (sortBy === "createdBy") {
+          aValue = a.__createdBy__?.name;
+          bValue = b.__createdBy__?.name;
+        }
+
+        // Handle numeric values
+        if (["subtotal", "taxAmount", "shippingCost", "discountAmount", "totalAmount", "paidAmount"].includes(sortBy)) {
+          aValue = Number(aValue) || 0;
+          bValue = Number(bValue) || 0;
+        }
+
+        // Handle dates
+        if (["createdAt", "updatedAt", "orderDate", "dueDate", "shippedDate", "deliveredDate"].includes(sortBy)) {
+          aValue = new Date(aValue || 0).getTime();
+          bValue = new Date(bValue || 0).getTime();
+        }
+
         const modifier = sortOrder === "asc" ? 1 : -1;
 
         if (aValue < bValue) return -modifier;
         if (aValue > bValue) return modifier;
         return 0;
       });
-  }, [orders, searchTerm, statusFilter, sortBy, sortOrder]);
+  }, [orders, searchTerm, statusFilter, typeFilter, sortBy, sortOrder]);
 
   // --- Helpers ---
-  const formatCurrency = (amount: number) =>
+  const formatCurrency = (amount: string | number) =>
     new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
-    }).format(amount);
+    }).format(Number(amount || 0));
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString("en-US", {
@@ -137,21 +208,55 @@ export default function OrderListPage() {
       minute: "2-digit",
     });
 
-  const stats = useMemo(
-    () => ({
-      PENDING: orders.filter((o) => o.status === "pending").length,
-      PROCESSING: orders.filter((o) => o.status === "processing").length,
-      COMPLETED: orders.filter((o) => o.status === "completed").length,
-      CANCELLED: orders.filter((o) => o.status === "cancelled").length,
-      SHIPPED: orders.filter((o) => o.status === "shipped").length,
-      TOTAL_VALUE: orders.reduce((sum, o) => sum + o.totalAmount, 0),
-    }),
-    [orders]
-  );
+  const formatShortDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
 
-  // --- Actions ---
+  // Calculate stats from actual data
+  const stats = useMemo(() => {
+    const statusCounts: Record<string, number> = {};
+    const typeCounts: Record<string, number> = {};
+    let totalValue = 0;
+    let completedValue = 0;
+
+    orders.forEach((order) => {
+      // Status counts
+      statusCounts[order.status] = (statusCounts[order.status] || 0) + 1;
+      
+      // Type counts
+      typeCounts[order.type] = (typeCounts[order.type] || 0) + 1;
+      
+      // Financial totals
+      const orderTotal = Number(order.totalAmount) || 0;
+      totalValue += orderTotal;
+      
+      if (order.status === "completed") {
+        completedValue += orderTotal;
+      }
+    });
+
+    return {
+      totalOrders: orders.length,
+      totalValue,
+      completedValue,
+      statusCounts,
+      typeCounts,
+      pending: statusCounts.pending || 0,
+      processing: statusCounts.processing || 0,
+      completed: statusCounts.completed || 0,
+      shipped: statusCounts.shipped || 0,
+      cancelled: statusCounts.cancelled || 0,
+    };
+  }, [orders]);
+
   const handleStatusChange = async (id: string, newStatus: OrderStatus) => {
-    await updateOrder(id, { status: newStatus });
+    await updateOrder(id, {
+      status: newStatus,
+      type: OrderType.PURCHASE,
+      paymentStatus: PaymentStatus.PENDING
+    });
   };
 
   const handleDeleteOrder = async (id: string) => {
@@ -164,7 +269,7 @@ export default function OrderListPage() {
     return (
       <div className="space-y-6">
         <div className="h-8 w-48 bg-gray-700 rounded animate-pulse" />
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="h-24 bg-gray-700 rounded animate-pulse" />
           ))}
@@ -186,7 +291,7 @@ export default function OrderListPage() {
         <div>
           <h1 className="text-3xl font-bold text-white">Orders</h1>
           <p className="text-gray-400 mt-1">
-            Manage purchase orders and track deliveries
+            Manage and track all orders across your organization
           </p>
         </div>
         <Button
@@ -207,45 +312,55 @@ export default function OrderListPage() {
       >
         {[
           {
-            label: "Pending",
-            value: stats.PENDING,
-            icon: Clock,
-            color: "text-yellow-400",
-          },
-          {
-            label: "Processing",
-            value: stats.PROCESSING,
+            label: "Total Orders",
+            value: stats.totalOrders,
             icon: Package,
             color: "text-blue-400",
+            description: "All orders",
+          },
+          {
+            label: "Pending",
+            value: stats.pending,
+            icon: Clock,
+            color: "text-yellow-400",
+            description: "Awaiting action",
           },
           {
             label: "Completed",
-            value: stats.COMPLETED,
+            value: stats.completed,
             icon: CheckCircle,
             color: "text-green-400",
-          },
-          {
-            label: "Shipped",
-            value: stats.SHIPPED,
-            icon: Truck,
-            color: "text-purple-400",
+            description: "Successfully processed",
           },
           {
             label: "Total Value",
-            value: formatCurrency(stats.TOTAL_VALUE),
+            value: formatCurrency(stats.totalValue),
             icon: TrendingUp,
             color: "text-[#B6F400]",
+            description: "All orders value",
+          },
+          {
+            label: "Completed Value",
+            value: formatCurrency(stats.completedValue),
+            icon: DollarSign,
+            color: "text-emerald-400",
+            description: "Value of completed orders",
           },
         ].map((stat, i) => (
-          <Card key={i} className="bg-[#1C2333] border-gray-700">
-            <CardContent className="p-6 flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-sm">{stat.label}</p>
-                <p className={`text-2xl font-bold ${stat.color}`}>
-                  {stat.value}
-                </p>
+          <Card key={i} className="bg-[#1C2333] border-gray-700 hover:border-gray-600 transition-colors">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm">{stat.label}</p>
+                  <p className={`text-2xl font-bold ${stat.color} mt-1`}>
+                    {stat.value}
+                  </p>
+                  <p className="text-gray-500 text-xs mt-1">{stat.description}</p>
+                </div>
+                <div className={`p-3 rounded-full ${stat.color.replace('text', 'bg')} bg-opacity-20`}>
+                  <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                </div>
               </div>
-              <stat.icon className={`w-8 h-8 ${stat.color}`} />
             </CardContent>
           </Card>
         ))}
@@ -261,41 +376,104 @@ export default function OrderListPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <Input
-            placeholder="Search orders, suppliers, or warehouses..."
+            placeholder="Search orders, suppliers, warehouses, or creators..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 bg-[#1C2333] border-gray-600 text-white"
           />
         </div>
+        
         <Select
           value={statusFilter}
-          onValueChange={(value) =>
-            setStatusFilter(value as OrderStatus | "all")
-          }
+          onValueChange={(value) => setStatusFilter(value)}
         >
           <SelectTrigger className="w-full sm:w-48 bg-[#1C2333] border-gray-600 text-white">
             <Filter className="w-4 h-4 mr-2" />
-            <SelectValue />
+            <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent className="bg-[#1C2333] border-gray-600">
-            {[
-              "all",
-              "PENDING",
-              "PROCESSING",
-              "COMPLETED",
-              "CANCELLED",
-              "SHIPPED",
-            ].map((status) => (
+            <SelectItem value="all" className="text-white hover:bg-[#2C3444]">
+              All Status
+            </SelectItem>
+            {Object.keys(statusColors).map((status) => (
               <SelectItem
                 key={status}
                 value={status}
                 className="text-white hover:bg-[#2C3444]"
               >
-                {status === "all" ? "All Status" : status}
+                <div className="flex items-center">
+                  <StatusIcon status={status} className="w-3 h-3 mr-2" />
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </div>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+
+        <Select
+          value={typeFilter}
+          onValueChange={(value) => setTypeFilter(value)}
+        >
+          <SelectTrigger className="w-full sm:w-48 bg-[#1C2333] border-gray-600 text-white">
+            <Package className="w-4 h-4 mr-2" />
+            <SelectValue placeholder="Type" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#1C2333] border-gray-600">
+            <SelectItem value="all" className="text-white hover:bg-[#2C3444]">
+              All Types
+            </SelectItem>
+            {Object.values(OrderType).map((type) => (
+              <SelectItem
+                key={type}
+                value={type}
+                className="text-white hover:bg-[#2C3444]"
+              >
+                <div className="flex items-center">
+                  <OrderTypeIcon type={type} className="w-3 h-3 mr-2" />
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={sortBy}
+          onValueChange={(value) => setSortBy(value)}
+        >
+          <SelectTrigger className="w-full sm:w-48 bg-[#1C2333] border-gray-600 text-white">
+            <Calendar className="w-4 h-4 mr-2" />
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#1C2333] border-gray-600">
+            <SelectItem value="createdAt" className="text-white hover:bg-[#2C3444]">
+              Created Date
+            </SelectItem>
+            <SelectItem value="orderDate" className="text-white hover:bg-[#2C3444]">
+              Order Date
+            </SelectItem>
+            <SelectItem value="dueDate" className="text-white hover:bg-[#2C3444]">
+              Due Date
+            </SelectItem>
+            <SelectItem value="totalAmount" className="text-white hover:bg-[#2C3444]">
+              Total Amount
+            </SelectItem>
+            <SelectItem value="orderNumber" className="text-white hover:bg-[#2C3444]">
+              Order Number
+            </SelectItem>
+            <SelectItem value="supplier" className="text-white hover:bg-[#2C3444]">
+              Supplier
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Button
+          variant="outline"
+          onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+          className="w-full sm:w-auto bg-[#1C2333] border-gray-600 text-white"
+        >
+          {sortOrder === "asc" ? "↑ Asc" : "↓ Desc"}
+        </Button>
       </motion.div>
 
       {/* Table */}
@@ -319,7 +497,7 @@ export default function OrderListPage() {
                 <Package className="w-12 h-12 text-gray-500 mx-auto mb-4" />
                 <p className="text-gray-400 text-lg mb-2">No orders found</p>
                 <p className="text-gray-500 mb-4">
-                  {searchTerm || statusFilter !== "all"
+                  {searchTerm || statusFilter !== "all" || typeFilter !== "all"
                     ? "Try adjusting your search or filters"
                     : "Create your first order to get started"}
                 </p>
@@ -337,17 +515,15 @@ export default function OrderListPage() {
                   <TableHeader>
                     <TableRow className="border-gray-700">
                       <TableHead className="text-gray-300">Order #</TableHead>
+                      <TableHead className="text-gray-300">Type</TableHead>
                       <TableHead className="text-gray-300">Status</TableHead>
+                      <TableHead className="text-gray-300">Payment</TableHead>
                       <TableHead className="text-gray-300">Supplier</TableHead>
                       <TableHead className="text-gray-300">Warehouse</TableHead>
-                      <TableHead className="text-gray-300">Items</TableHead>
-                      <TableHead className="text-gray-300 text-right">
-                        Total
-                      </TableHead>
+                      <TableHead className="text-gray-300">Created By</TableHead>
+                      <TableHead className="text-gray-300 text-right">Total</TableHead>
                       <TableHead className="text-gray-300">Created</TableHead>
-                      <TableHead className="text-gray-300 text-center">
-                        Actions
-                      </TableHead>
+                      <TableHead className="text-gray-300 text-center">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -367,8 +543,16 @@ export default function OrderListPage() {
                                 {order.orderNumber}
                               </p>
                               <p className="text-gray-400 text-xs">
-                                by {order.createdById}
+                                {order.referenceNumber || "No reference"}
                               </p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <OrderTypeIcon type={order.type} className="w-4 h-4 text-blue-400" />
+                              <Badge variant="outline" className="text-gray-400 border-gray-600 capitalize">
+                                {order.type}
+                              </Badge>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -378,71 +562,90 @@ export default function OrderListPage() {
                                   variant="ghost"
                                   size="sm"
                                   className={cn(
-                                    "h-auto p-2 font-medium",
-                                    statusColors[order.status as OrderStatus]
+                                    "h-auto p-2 font-medium capitalize",
+                                    statusColors[order.status] || "bg-gray-500/20 text-gray-400"
                                   )}
                                 >
                                   <StatusIcon
-                                    status={order.status as OrderStatus}
+                                    status={order.status}
                                     className="w-3 h-3 mr-1"
                                   />
                                   {order.status}
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent className="bg-[#1C2333] border-gray-600">
-                                {(
-                                  [
-                                    "PENDING",
-                                    "PROCESSING",
-                                    "COMPLETED",
-                                    "CANCELLED",
-                                    "SHIPPED",
-                                  ] as OrderStatus[]
-                                ).map((status) => (
+                                {Object.keys(statusColors).map((status) => (
                                   <DropdownMenuItem
                                     key={status}
-                                    onClick={() =>
-                                      handleStatusChange(order.id, status)
-                                    }
+                                    onClick={() => handleStatusChange(order.id, status as OrderStatus)}
                                     className="text-white hover:bg-[#2C3444]"
                                   >
                                     <StatusIcon
                                       status={status}
                                       className="w-4 h-4 mr-2"
                                     />
-                                    {status}
+                                    {status.charAt(0).toUpperCase() + status.slice(1)}
                                   </DropdownMenuItem>
                                 ))}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
                           <TableCell>
-                            <p className="text-white font-medium">
-                              {order.supplierName}
-                            </p>
+                            <Badge className={cn(
+                              "capitalize",
+                              paymentStatusColors[order.paymentStatus] || "bg-gray-500/20 text-gray-400"
+                            )}>
+                              {order.paymentStatus}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <p className="text-white font-medium">
+                                {order.__supplier__?.name || "No supplier"}
+                              </p>
+                              <p className="text-gray-400 text-xs">
+                                {order.__supplier__?.contactPerson || "No contact"}
+                              </p>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <p className="text-gray-300">
-                              {order.warehouseName}
+                              {order.__warehouse__?.name || "No warehouse"}
                             </p>
                           </TableCell>
                           <TableCell>
-                            <Badge
-                              variant="outline"
-                              className="text-gray-400 border-gray-600"
-                            >
-                              {order.itemCount} items
-                            </Badge>
+                            <div className="space-y-1">
+                              <p className="text-white text-sm">
+                                {order.createdBy?.name || "Unknown"}
+                              </p>
+                              <p className="text-gray-400 text-xs">
+                                {order.createdBy?.role || "No role"}
+                              </p>
+                            </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <p className="text-white font-semibold">
-                              {formatCurrency(order.totalAmount)}
-                            </p>
+                            <div className="space-y-1">
+                              <p className="text-white font-semibold">
+                                {formatCurrency(order.totalAmount)}
+                              </p>
+                              {Number(order.paidAmount) > 0 && (
+                                <p className="text-green-400 text-xs">
+                                  Paid: {formatCurrency(order.paidAmount)}
+                                </p>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>
-                            <p className="text-gray-400 text-sm">
-                              {formatDate(order.createdAt)}
-                            </p>
+                            <div className="space-y-1">
+                              <p className="text-gray-400 text-sm">
+                                {formatShortDate(order.createdAt)}
+                              </p>
+                              {order.dueDate && (
+                                <p className="text-yellow-400 text-xs">
+                                  Due: {formatShortDate(order.dueDate)}
+                                </p>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>
                             <DropdownMenu>
@@ -460,18 +663,14 @@ export default function OrderListPage() {
                                 align="end"
                               >
                                 <DropdownMenuItem
-                                  onClick={() =>
-                                    router.push(`/orders/${order.id}`)
-                                  }
+                                  onClick={() => router.push(`/orders/${order.id}`)}
                                   className="text-white hover:bg-[#2C3444]"
                                 >
                                   <Eye className="w-4 h-4 mr-2" />
                                   View Details
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  onClick={() =>
-                                    router.push(`/orders/${order.id}/edit`)
-                                  }
+                                  onClick={() => router.push(`/orders/${order.id}/edit`)}
                                   className="text-white hover:bg-[#2C3444]"
                                 >
                                   <Edit className="w-4 h-4 mr-2" />

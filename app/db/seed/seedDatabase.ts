@@ -6,12 +6,10 @@ import { Supplier, SupplierStatus, SupplierTier } from "../entities/supplier";
 import { Product, ProductStatus, ProductCondition } from "../entities/products";
 import {
   Order,
-  OrderStatus,
-  OrderType,
   PaymentStatus,
 } from "../entities/order";
 import { OrderItem, OrderItemStatus } from "../entities/orderItem";
-
+import { OrderStatus ,OrderType } from "@/types";
 async function seed() {
   await AppDataSource.initialize();
   console.log("📦 Database connected for seeding");

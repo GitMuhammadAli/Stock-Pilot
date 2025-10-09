@@ -1,18 +1,19 @@
 // app/api/order/user/[userId]/route.ts
 import { withAuth } from "@/lib/middleware/withAuth";
-import { orderService } from "@/lib/services/orderServices";
+import { OrderService } from "@/lib/services/orderServices";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/db/connectDb";
 
 
-async function handler(
-  req: NextRequest,
-) {
+
+async function handler(req: NextRequest, _context: any, user: any) {
   try {
     await connectDB();
-    const targetUserId = req.nextUrl.pathname.split("/").pop();
+    const orderService = new OrderService
+    const userId = user.id;
+  console.log(userId)
 
-    if (!targetUserId) {
+    if (!userId) {
       return NextResponse.json(
         { success: false, message: "User ID is required in the path." },
         { status: 400 }
@@ -20,8 +21,8 @@ async function handler(
     }
 
     if (req.method === "GET") {
-      console.log(`Fetching Orders for User ID: ${targetUserId}`);
-      const response = await orderService.getOrdersByUser(targetUserId);
+      console.log(`Fetching Orders for User ID: ${userId}`);
+      const response = await orderService.getOrdersByUser(userId);
 
       if (response.success) {
         return NextResponse.json({ success: true, data: response.data }, { status: 200 });

@@ -1,7 +1,7 @@
 import { withAuth } from "@/lib/middleware/withAuth";
 import { orderItemService } from "@/lib/services/orderItemServices"; // Import the singleton instance
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/db/connectDb"; // Import connectDB
+import { connectDB } from "@/db/connectDb";
 
 async function handler(req: NextRequest, _context: any, user: any) {
   try {

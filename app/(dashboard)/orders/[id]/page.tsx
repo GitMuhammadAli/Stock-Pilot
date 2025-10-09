@@ -26,6 +26,13 @@ import {
   ClipboardList,
   CheckCircle2,
   Clock,
+  User,
+  MapPin,
+  Phone,
+  Mail,
+  Globe,
+  CreditCard,
+  Star,
 } from "lucide-react";
 import { useOrder } from "@/providers/orderProvider";
 
@@ -66,6 +73,40 @@ export default function OrderDetailsPage() {
   const formatDate = (d: string | null) =>
     d ? new Date(d).toLocaleString() : "—";
 
+  // Status badge colors
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed": return "bg-green-500";
+      case "pending": return "bg-yellow-500";
+      case "processing": return "bg-blue-500";
+      case "shipped": return "bg-purple-500";
+      case "cancelled": return "bg-red-500";
+      case "draft": return "bg-gray-500";
+      default: return "bg-gray-500";
+    }
+  };
+
+  const getPaymentStatusColor = (status: string) => {
+    switch (status) {
+      case "paid": return "bg-green-600";
+      case "pending": return "bg-yellow-600";
+      case "partial": return "bg-blue-600";
+      case "overdue": return "bg-red-600";
+      case "refunded": return "bg-orange-600";
+      default: return "bg-gray-600";
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "urgent": return "bg-red-600";
+      case "high": return "bg-orange-600";
+      case "normal": return "bg-blue-600";
+      case "low": return "bg-gray-600";
+      default: return "bg-gray-600";
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -102,42 +143,32 @@ export default function OrderDetailsPage() {
         </div>
       </div>
 
-      {/* Status */}
+      {/* Status Badges */}
       <Card className="bg-[#1C2333] border-none">
-        <CardContent className="flex items-center gap-3 p-6">
-          <Badge
-            className={`${
-              order.status === "completed"
-                ? "bg-green-500"
-                : order.status === "pending"
-                ? "bg-yellow-500"
-                : "bg-gray-500"
-            } text-white`}
-          >
+        <CardContent className="flex flex-wrap items-center gap-3 p-6">
+          <Badge className={`${getStatusColor(order.status)} text-white`}>
             {order.status.toUpperCase()}
           </Badge>
-          <Badge
-            className={`${
-              order.paymentStatus === "paid"
-                ? "bg-green-600"
-                : "bg-orange-600"
-            } text-white`}
-          >
-            Payment: {order.paymentStatus}
+          <Badge className={`${getPaymentStatusColor(order.paymentStatus)} text-white`}>
+            Payment: {order.paymentStatus.toUpperCase()}
+          </Badge>
+          <Badge className={`${getPriorityColor(order.priority)} text-white`}>
+            {order.priority.toUpperCase()} PRIORITY
           </Badge>
           {order.isRushOrder && (
-            <Badge className="bg-red-600 text-white">Rush Order</Badge>
+            <Badge className="bg-red-600 text-white">RUSH ORDER</Badge>
           )}
-          <Badge className="bg-purple-600 text-white">
-            {order.priority} priority
+          <Badge className="bg-indigo-600 text-white">
+            {order.type.toUpperCase()} ORDER
           </Badge>
         </CardContent>
       </Card>
 
-      {/* Overview */}
+      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Info */}
+        {/* Left Column - Order Details */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Order Information */}
           <Card className="bg-[#1C2333] border-none">
             <CardHeader>
               <CardTitle className="text-[#B6F400] flex items-center">
@@ -147,11 +178,11 @@ export default function OrderDetailsPage() {
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-300">
               <div>
                 <p className="text-gray-400 text-xs mb-1">Order Type</p>
-                <p className="capitalize">{order.type}</p>
+                <p className="capitalize text-white font-medium">{order.type}</p>
               </div>
               <div>
-                <p className="text-gray-400 text-xs mb-1">Reference #</p>
-                <p>{order.referenceNumber || "—"}</p>
+                <p className="text-gray-400 text-xs mb-1">Reference Number</p>
+                <p className="text-white font-medium">{order.referenceNumber || "—"}</p>
               </div>
               <div>
                 <p className="text-gray-400 text-xs mb-1">Order Date</p>
@@ -169,88 +200,257 @@ export default function OrderDetailsPage() {
                 <p className="text-gray-400 text-xs mb-1">Delivered Date</p>
                 <p>{formatDate(order.deliveredDate)}</p>
               </div>
+              <div className="md:col-span-2">
+                <p className="text-gray-400 text-xs mb-1">Purchase Order Number</p>
+                <p className="text-white font-medium">{order.purchaseOrderNumber || "—"}</p>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Supplier */}
+          {/* Shipping & Tracking Information */}
+          {(order.trackingNumber || order.shippingCarrier) && (
+            <Card className="bg-[#1C2333] border-none">
+              <CardHeader>
+                <CardTitle className="text-[#B6F400] flex items-center">
+                  <Truck className="mr-2 h-5 w-5" /> Shipping & Tracking
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-300">
+                {order.trackingNumber && (
+                  <div>
+                    <p className="text-gray-400 text-xs mb-1">Tracking Number</p>
+                    <p className="text-white font-medium">{order.trackingNumber}</p>
+                  </div>
+                )}
+                {order.shippingCarrier && (
+                  <div>
+                    <p className="text-gray-400 text-xs mb-1">Shipping Carrier</p>
+                    <p className="text-white font-medium">{order.shippingCarrier}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Supplier Information */}
           <Card className="bg-[#1C2333] border-none">
             <CardHeader>
               <CardTitle className="text-[#B6F400] flex items-center">
-                <Building2 className="mr-2 h-5 w-5" /> Supplier
+                <Building2 className="mr-2 h-5 w-5" /> Supplier Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-gray-300 space-y-1">
-              <p className="text-white font-medium">{order.__supplier__?.name}</p>
-              <p>{order.__supplier__?.address}</p>
-              <p>Email: {order.__supplier__?.email}</p>
-              <p>Phone: {order.__supplier__?.phone}</p>
-              <p>Contact: {order.__supplier__?.contactPerson}</p>
+            <CardContent className="text-sm text-gray-300 space-y-4">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <p className="text-white font-medium text-lg">{order.__supplier__?.name}</p>
+                  <div className="flex items-center text-gray-400">
+                    <MapPin className="w-4 h-4 mr-2" />
+                    <span>{order.__supplier__?.address}</span>
+                  </div>
+                  <div className="flex items-center text-gray-400">
+                    <Mail className="w-4 h-4 mr-2" />
+                    <span>{order.__supplier__?.email}</span>
+                  </div>
+                  <div className="flex items-center text-gray-400">
+                    <Phone className="w-4 h-4 mr-2" />
+                    <span>{order.__supplier__?.phone}</span>
+                  </div>
+                  {order.__supplier__?.website && (
+                    <div className="flex items-center text-gray-400">
+                      <Globe className="w-4 h-4 mr-2" />
+                      <span>{order.__supplier__?.website}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="text-right space-y-2">
+                  <Badge className={`${
+                    order.__supplier__?.status === 'active' ? 'bg-green-500' : 'bg-gray-500'
+                  } text-white`}>
+                    {order.__supplier__?.status?.toUpperCase()}
+                  </Badge>
+                  <Badge className="bg-purple-500 text-white">
+                    {order.__supplier__?.tier?.toUpperCase()} TIER
+                  </Badge>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-600">
+                <div>
+                  <p className="text-gray-400 text-xs">Contact Person</p>
+                  <p className="text-white">{order.__supplier__?.contactPerson}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs">Credit Limit</p>
+                  <p className="text-white">{formatCurrency(order.__supplier__?.creditLimit)}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs">Payment Terms</p>
+                  <p className="text-white">{order.__supplier__?.paymentTerms} days</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs">Tax ID</p>
+                  <p className="text-white">{order.__supplier__?.taxId || "—"}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Warehouse */}
+          {/* Warehouse Information */}
           <Card className="bg-[#1C2333] border-none">
             <CardHeader>
               <CardTitle className="text-[#B6F400] flex items-center">
-                <Warehouse className="mr-2 h-5 w-5" /> Warehouse
+                <Warehouse className="mr-2 h-5 w-5" /> Warehouse Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-gray-300 space-y-1">
-              <p className="text-white font-medium">
-                {order.__warehouse__?.name}
-              </p>
-              <p>{order.__warehouse__?.location}</p>
-              <p>{order.__warehouse__?.description}</p>
-              <p>
-                Capacity: {order.__warehouse__?.capacity} | Current:{" "}
-                {order.__warehouse__?.currentOccupancy}
-              </p>
-              <p>Email: {order.__warehouse__?.contactEmail}</p>
-              <p>Phone: {order.__warehouse__?.contactPhone}</p>
+            <CardContent className="text-sm text-gray-300 space-y-4">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <p className="text-white font-medium text-lg">{order.__warehouse__?.name}</p>
+                  <div className="flex items-center text-gray-400">
+                    <MapPin className="w-4 h-4 mr-2" />
+                    <span>{order.__warehouse__?.location}</span>
+                  </div>
+                  {order.__warehouse__?.description && (
+                    <p className="text-gray-400">{order.__warehouse__?.description}</p>
+                  )}
+                </div>
+                <Badge className={`${
+                  order.__warehouse__?.status === 'active' ? 'bg-green-500' : 'bg-gray-500'
+                } text-white`}>
+                  {order.__warehouse__?.status?.toUpperCase()}
+                </Badge>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-600">
+                <div>
+                  <p className="text-gray-400 text-xs">Capacity</p>
+                  <p className="text-white">{order.__warehouse__?.capacity} units</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs">Current Occupancy</p>
+                  <p className="text-white">{order.__warehouse__?.currentOccupancy} units</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs">Contact Email</p>
+                  <p className="text-white">{order.__warehouse__?.contactEmail}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs">Contact Phone</p>
+                  <p className="text-white">{order.__warehouse__?.contactPhone}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Financial */}
+        {/* Right Column - Financial & Additional Info */}
         <div className="space-y-6">
+          {/* Financial Summary */}
           <Card className="bg-[#1C2333] border-none">
-            <CardContent className="p-6 space-y-3 text-sm text-gray-300">
-              <div className="flex items-center mb-2">
-                <DollarSign className="h-5 w-5 text-green-500 mr-2" />
-                <h3 className="font-medium text-white">Financials</h3>
+            <CardHeader>
+              <CardTitle className="text-[#B6F400] flex items-center">
+                <DollarSign className="mr-2 h-5 w-5" /> Financial Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Subtotal:</span>
+                <span className="text-white font-medium">{formatCurrency(order.subtotal)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Subtotal:</span>
-                <span className="text-white">{formatCurrency(order.subtotal)}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Tax Amount:</span>
+                <span className="text-white font-medium">{formatCurrency(order.taxAmount)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Tax:</span>
-                <span className="text-white">{formatCurrency(order.taxAmount)}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Shipping Cost:</span>
+                <span className="text-white font-medium">{formatCurrency(order.shippingCost)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Shipping:</span>
-                <span className="text-white">{formatCurrency(order.shippingCost)}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Discount Amount:</span>
+                <span className="text-red-400 font-medium">-{formatCurrency(order.discountAmount)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Discount:</span>
-                <span className="text-white">
-                  -{formatCurrency(order.discountAmount)}
+              <div className="border-t border-gray-600 pt-3 flex justify-between items-center">
+                <span className="text-white font-bold">Total Amount:</span>
+                <span className="text-[#B6F400] font-bold text-lg">{formatCurrency(order.totalAmount)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Paid Amount:</span>
+                <span className="text-green-400 font-medium">{formatCurrency(order.paidAmount)}</span>
+              </div>
+              <div className="flex justify-between items-center border-t border-gray-600 pt-3">
+                <span className="text-gray-400">Remaining Balance:</span>
+                <span className="text-yellow-400 font-medium">
+                  {formatCurrency(Number(order.totalAmount) - Number(order.paidAmount))}
                 </span>
               </div>
-              <div className="flex justify-between font-semibold text-lg text-[#B6F400]">
-                <span>Total:</span>
-                <span>{formatCurrency(order.totalAmount)}</span>
+            </CardContent>
+          </Card>
+
+          {/* Created By Information */}
+          <Card className="bg-[#1C2333] border-none">
+            <CardHeader>
+              <CardTitle className="text-[#B6F400] flex items-center">
+                <User className="mr-2 h-5 w-5" /> Created By
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-gray-300 space-y-3">
+              <div>
+                <p className="text-white font-medium">{order.__createdBy__?.name}</p>
+                <p className="text-gray-400">{order.__createdBy__?.email}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-600">
+                <div>
+                  <p className="text-gray-400 text-xs">Role</p>
+                  <Badge className="bg-blue-500 text-white mt-1">
+                    {order.__createdBy__?.role}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs">Status</p>
+                  <Badge className={`${
+                    order.__createdBy__?.status === 'active' ? 'bg-green-500' : 'bg-yellow-500'
+                  } text-white mt-1`}>
+                    {order.__createdBy__?.status}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Order Metadata */}
+          <Card className="bg-[#1C2333] border-none">
+            <CardHeader>
+              <CardTitle className="text-[#B6F400] flex items-center">
+                <Clock className="mr-2 h-5 w-5" /> Order Timeline
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-gray-300 space-y-3">
+              <div className="flex justify-between">
+                <span>Created:</span>
+                <span>{formatDate(order.createdAt)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Paid:</span>
-                <span className="text-white">{formatCurrency(order.paidAmount)}</span>
+                <span>Last Updated:</span>
+                <span>{formatDate(order.updatedAt)}</span>
               </div>
+              {order.shippedDate && (
+                <div className="flex justify-between">
+                  <span>Shipped:</span>
+                  <span>{formatDate(order.shippedDate)}</span>
+                </div>
+              )}
+              {order.deliveredDate && (
+                <div className="flex justify-between">
+                  <span>Delivered:</span>
+                  <span>{formatDate(order.deliveredDate)}</span>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
 
-      {/* Tabs for events/notes */}
+      {/* Notes & Additional Information */}
       <Card className="bg-[#1C2333] border-none">
         <CardContent className="p-6">
           <Tabs defaultValue="notes">
@@ -259,32 +459,31 @@ export default function OrderDetailsPage() {
                 value="notes"
                 className="data-[state=active]:bg-[#B6F400] data-[state=active]:text-[#0B0F1A]"
               >
-                Notes
+                Order Notes
               </TabsTrigger>
               <TabsTrigger
-                value="timeline"
+                value="internal"
                 className="data-[state=active]:bg-[#B6F400] data-[state=active]:text-[#0B0F1A]"
               >
-                Timeline
+                Internal Notes
               </TabsTrigger>
             </TabsList>
             <TabsContent value="notes" className="mt-4 text-gray-300 text-sm">
-              {order.notes || "No notes for this order"}
+              {order.notes ? (
+                <div className="bg-[#2C3444] p-4 rounded-lg">
+                  {order.notes}
+                </div>
+              ) : (
+                <p className="text-gray-500 italic">No notes for this order</p>
+              )}
             </TabsContent>
-            <TabsContent value="timeline" className="mt-4 text-gray-300 text-sm space-y-2">
-              <p>
-                <Clock className="inline h-4 w-4 mr-2 text-yellow-500" />
-                Created: {formatDate(order.createdAt)}
-              </p>
-              <p>
-                <CheckCircle2 className="inline h-4 w-4 mr-2 text-green-500" />
-                Updated: {formatDate(order.updatedAt)}
-              </p>
-              {order.shippedDate && (
-                <p>
-                  <Truck className="inline h-4 w-4 mr-2 text-blue-500" />
-                  Shipped: {formatDate(order.shippedDate)}
-                </p>
+            <TabsContent value="internal" className="mt-4 text-gray-300 text-sm">
+              {order.internalNotes ? (
+                <div className="bg-[#2C3444] p-4 rounded-lg">
+                  {order.internalNotes}
+                </div>
+              ) : (
+                <p className="text-gray-500 italic">No internal notes for this order</p>
               )}
             </TabsContent>
           </Tabs>

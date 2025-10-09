@@ -64,11 +64,11 @@ export function OrderProvider({ children }: OrderProviderProps) {
     }, []);
 
     // Get orders by user (GET /api/order/user/{userId})
-    const getAllOrdersForUser = useCallback(async (userId: string) => {
+    const getAllOrdersForUser = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`/api/order/user/${userId}`, {
+            const response = await fetch(`/api/order/user`, {
                 method: 'GET',
                 headers: getAuthHeaders(),
             });
@@ -77,10 +77,10 @@ export function OrderProvider({ children }: OrderProviderProps) {
             if (result.success && result.data) {
                 setOrders(result.data);
             } else {
-                setError(result.message || `Failed to fetch orders for user ${userId}`);
+                setError(result.message || `Failed to fetch orders for user`);
             }
         } catch (err: any) {
-            setError(`An error occurred while fetching orders for user ${userId}: ` + err.message);
+            setError(`An error occurred while fetching orders for user : ` + err.message);
             console.error(err);
         } finally {
             setLoading(false);

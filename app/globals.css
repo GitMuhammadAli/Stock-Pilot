@@ -79,7 +79,8 @@ html {
 
 html {
   scroll-behavior: smooth;
-  overflow-y: scroll; /* Always show scrollbar to prevent layout shifts */
+  /* Show scrollbar only when needed to avoid double scrollbars with in-app scroll containers */
+  overflow-y: auto;
 }
 
 body {

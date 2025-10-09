@@ -46,7 +46,7 @@ export class OrderService {
    * @param data - The data for the new order, including related entity IDs.
    * @returns An OrderResponse indicating success or failure, with the created order data.
    */
-  async createOrder(data: CreateOrderData): Promise<OrderResponse> {
+  async createOrder(createdById:string , data: CreateOrderData): Promise<OrderResponse> {
     try {
       console.log("order data", data);
 
@@ -60,13 +60,13 @@ export class OrderService {
       }
 
       const user = await this.userRepo.findOne({
-        where: { id: data.createdById },
+        where: { id: createdById },
       });
 
       if (!user) {
         return {
           success: false,
-          message: `User with ID ${data.createdById} not found.`,
+          message: `User with ID ${createdById} not found.`,
         };
       }
 
@@ -125,7 +125,7 @@ export class OrderService {
         warehouse: warehouse,
         warehouseId: data.warehouseId,
         createdBy: user,
-        createdById: data.createdById,
+        createdById: createdById,
       };
 
       const order = this.orderRepo.create(orderData);
