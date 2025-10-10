@@ -5,7 +5,6 @@ import { WareHouse } from "./entities/wareHouse";
 import { Product } from "./entities/products";
 import { Supplier } from "./entities/supplier";
 import { Order } from "./entities/order";
-import { OrderItem } from "./entities/orderItem";
 import path from "path";
 import * as dotenv from 'dotenv';
 
@@ -20,7 +19,7 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD || "1234",
   database: process.env.DB_NAME || "inventoryDb",
   synchronize: false, // Keep false for production. Use migrations.
-  entities: [User, WareHouse, Product, Supplier, Order, OrderItem],
+  entities: [User, WareHouse, Product, Supplier, Order],
   migrations: [path.join(__dirname, "migrations", "*.{ts,js}")],
   logging: process.env.NODE_ENV === "development",
 });

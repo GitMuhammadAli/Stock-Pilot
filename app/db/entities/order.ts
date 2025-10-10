@@ -191,7 +191,6 @@ export class Order extends BaseEntity {
     assignedToId?: string;
 
     // ✅ NO @OneToMany relationship to avoid circular dependency
-    // Use OrderService.getOrderItems(orderId) instead
 
     @BeforeInsert()
     generateOrderNumber() {

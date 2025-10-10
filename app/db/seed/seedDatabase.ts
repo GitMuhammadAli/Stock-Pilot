@@ -8,7 +8,6 @@ import {
   Order,
   PaymentStatus,
 } from "../entities/order";
-import { OrderItem, OrderItemStatus } from "../entities/orderItem";
 import { OrderStatus ,OrderType } from "@/types";
 async function seed() {
   await AppDataSource.initialize();
@@ -17,7 +16,6 @@ async function seed() {
   try {
     // Clear all tables in correct order (respecting foreign keys)
     console.log("🗑️ Clearing existing data...");
-    await AppDataSource.manager.clear(OrderItem);
     await AppDataSource.manager.clear(Order);
     await AppDataSource.manager.clear(Product);
     await AppDataSource.manager.clear(Supplier);
@@ -745,63 +743,6 @@ async function seed() {
 
   // ===== SEED ORDER ITEMS =====
   console.log("📦 Seeding order items...");
-  const orderItems = await Promise.all([
-    // For Order 1 - Electronics
-    AppDataSource.manager.save(OrderItem, {
-      orderId: orders[0].id,
-      productId: products[0].id,
-      productName: products[0].name,
-      productSku: products[0].sku,
-      productCategory: products[0].category,
-      quantity: 5,
-      unitPrice: products[0].price,
-      unitCost: products[0].costPrice,
-      totalPrice: products[0].price * 5,
-      discountPercentage: 0,
-      discountAmount: 0,
-      status: OrderItemStatus.PENDING,
-      notes: "Priority electronics shipment",
-      expectedDeliveryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-    }),
-
-    // For Order 2 - Furniture
-    AppDataSource.manager.save(OrderItem, {
-      orderId: orders[1].id,
-      productId: products[2].id,
-      productName: products[2].name,
-      productSku: products[2].sku,
-      productCategory: products[2].category,
-      quantity: 10,
-      unitPrice: products[2].price,
-      unitCost: products[2].costPrice,
-      totalPrice: products[2].price * 10,
-      discountPercentage: 5,
-      discountAmount: products[2].price * 10 * 0.05,
-      status: OrderItemStatus.CONFIRMED,
-      expectedDeliveryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-    }),
-
-    // For Order 3 - Printers
-    AppDataSource.manager.save(OrderItem, {
-      orderId: orders[2].id,
-      productId: products[5].id,
-      productName: products[5].name,
-      productSku: products[5].sku,
-      productCategory: products[5].category,
-      quantity: 3,
-      quantityFulfilled: 3,
-      unitPrice: products[5].price,
-      unitCost: products[5].costPrice,
-      totalPrice: products[5].price * 3,
-      discountPercentage: 0,
-      discountAmount: 0,
-      status: OrderItemStatus.DELIVERED,
-      actualDeliveryDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-      notes: "Delivered in full",
-    }),
-  ]);
-
-  console.log(`✅ Created ${orderItems.length} order items`);
 
   console.log("🎯 Database seeding completed successfully!");
   process.exit(0);

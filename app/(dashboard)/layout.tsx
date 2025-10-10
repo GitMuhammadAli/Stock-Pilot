@@ -29,6 +29,19 @@ export default function DashboardLayout({
     setIsHydrated(true);
   }, []);
 
+  // Prevent document scrolling while dashboard is mounted to avoid double scrollbars
+  useEffect(() => {
+    if (!isHydrated) return;
+    const prevHtmlOverflowY = document.documentElement.style.overflowY;
+    const prevBodyOverflowY = document.body.style.overflowY;
+    document.documentElement.style.overflowY = "hidden";
+    document.body.style.overflowY = "hidden";
+    return () => {
+      document.documentElement.style.overflowY = prevHtmlOverflowY;
+      document.body.style.overflowY = prevBodyOverflowY;
+    };
+  }, [isHydrated]);
+
   // Handle responsive behavior
   useEffect(() => {
     if (!isHydrated) return;
@@ -95,7 +108,7 @@ export default function DashboardLayout({
   return (
     <ProtectedRoute>
       <SidebarContext.Provider value={sidebarContextValue}>
-        <div className="flex h-screen bg-[#0B0F1A] text-white overflow-hidden">
+        <div className="fixed inset-0 flex bg-[#0B0F1A] text-white overflow-hidden">
           {/* Mobile overlay */}
           {isMobile && isSidebarVisible && (
             <div
@@ -135,7 +148,7 @@ export default function DashboardLayout({
           >
             <TopBar />
             {/* 👇 scroll is here */}
-            <div className="@container/main flex flex-1 flex-col p-4 md:p-6 h-0 min-h-0 overflow-y-auto">
+            <div className="@container/main flex flex-1 flex-col p-4 md:p-6 h-0 min-h-0 overflow-y-auto overscroll-contain">
               <SidebarTrigger
                 className="md:hidden mb-4"
                 onClick={toggleSidebar}
